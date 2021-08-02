@@ -1,3 +1,10 @@
+# File types
+*.pyc
+
+# Folders
+python/cache/*
+
+# Files
 .Rproj.user
 .Rhistory
 .RData
