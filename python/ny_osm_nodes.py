@@ -5,7 +5,7 @@ import geopandas as gpd
 import os
 import osmnx as ox
 
-from osm_streetspace_utils import osm_nodes_gdf_from_query, osm_ways_gdf_from_query, aggregate_tag_data, tag_bar_chart
+import osm_streetspace_utils as ossutils
 
 
 #########################
@@ -19,8 +19,11 @@ from osm_streetspace_utils import osm_nodes_gdf_from_query, osm_ways_gdf_from_qu
 #
 ##########################
 
+merc_crs = {'init' :'epsg:3857'}
+
 # Get new york place boundary
-gdfNY = ox.geocode_to_gdf("Manhattan, New York, New York, USA")
+study_area = "Manhattan, New York, New York, USA"
+gdfNY = ox.geocode_to_gdf(study_area)
 
 e,n,s,w = gdfNY.loc[0, ['bbox_east', 'bbox_north', 'bbox_south', 'bbox_west']].values
 bb_string = "{},{},{},{}".format(s,w,n,e)
@@ -75,13 +78,10 @@ amenity_node_query = """
 
 
 # Might need to add relations to reconstruct geometries
-gdfKerbPoints = osm_nodes_gdf_from_query(kerbs_query)
-gdfKerbs = osm_ways_gdf_from_query(kerbs_query)
+gdfKerbPoints = ossutils.osm_nodes_gdf_from_query(kerbs_query)
+gdfKerbs = ossutils.osm_ways_gdf_from_query(kerbs_query)
 gdfKerbs = gdfKerbs.drop(['coords','nodes','lat','lon', 'bounds'], axis=1)
 gdfKerbs = gdfKerbs.loc[ gdfKerbs.geometry.type!='Point']
-#gdfBuildings = osm_gdf_from_query(buildings_query) # possibly too big to run
-#gdfNodes = osm_gdf_from_query(node_query) # also possibly too big to run
-
 
 
 gdfKerbPoints.to_file("..\\data\\new_york\\ny_kerb_points.shp")
