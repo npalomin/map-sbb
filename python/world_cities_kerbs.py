@@ -7,28 +7,45 @@ import osmnx as ox
 
 import osm_streetspace_utils as ossutils
 
+
+################################
+#
+#
+# Globals
+#
+#
+################################
+
 merc_crs = {'init' :'epsg:3857'}
 output_dir = "..//data//world"
 kerb_data_filename = "kerb_data.gpkg"
 
-'''
-# Load world cities data, access from https://data.london.gov.uk/dataset/global-city-population-estimates
-#dfCityPop = pd.read_csv("../data/world/global-city-population-estimates.csv", encoding_errors = 'replace')
-dfCityPop = pd.read_csv("../data/world/global-city-population-estimates.csv", encoding = 'utf-16')
 
-# Filter to select just top n cities per country
-n = 2
-dfCityPop = dfCityPop.groupby("Country or area").apply(lambda df: df.sort_values(by='2020').iloc[:min(df.shape[0], n)])
-dfCityPop['nm_cntry'] = dfCityPop['Urban Agglomeration'] + ", " + dfCityPop['Country or area']
+################################
+#
+#
+# Functions
+#
+#
+################################
+def get_kerb_data_for_single_city(city_name, project_crs = merc_crs):
+	result = ossutils.osm_ways_in_geocode_area(city_name, ["barrier=kerb", "kerb"])
 
-countries = ['United Kingdom', 'France', 'Space', 'Japan', 'Germany', 'China', 'United States of America']
+	if result['data'] is None:
+		pass
+	elif result['data'].shape[0]==0:
+		result['data'] = None
+		result['note'] = 'Empty dataframe. No osm data found.'
+	else:
+		result['data'] = result['data'].to_crs(project_crs)
 
-cities = dfCityPop.loc[ dfCityPop['Country or area'].isin(countries), 'nm_cntry'].values
-'''
+		# Calculate area of gdf and add into gdf
+		bb = result['data'].total_bounds
+		area = ( abs(bb[0]-bb[2]) * abs(bb[1]-bb[3]))
+		result['data']['bb_area'] = area
+		result['data']['area_name'] = city_name
 
-# Cities identified in Rhoads et al as having open pavement datasets available
-cities = ['Denver', 'Montreal', 'Washington D.C.', 'Boston', 'New York', 'Buenos Aires', 'Bogot', 'Brussels', 'Barcelona', 'Paris']
-cities = ['Boston', 'New York', 'Bogot', 'Brussels', 'Barcelona']
+	return result
 
 def get_kerbs_for_multiple_cities(city_names, project_crs = merc_crs):
 
@@ -36,20 +53,10 @@ def get_kerbs_for_multiple_cities(city_names, project_crs = merc_crs):
 
 	for city_name in city_names:
 		try:
-			result = ossutils.osm_ways_in_geocode_area(city_name, ["barrier=kerb", "kerb"])
-
-			if result['data'] is not None:
-				result['data'] = result['data'].to_crs(project_crs)
-
-				# Calculate area of gdf and add into gdf
-				bb = result['data'].total_bounds
-				area = ( abs(bb[0]-bb[2]) * abs(bb[1]-bb[3]))
-				result['data']['bb_area'] = area
-				result['data']['area_name'] = city_name
-			
+			result = get_kerb_data_for_single_city(city_name, project_crs = project_crs)
 			city_kerbs[city_name] = result
 		except Exception as e:
-			print(e)
+			print(city_name, e)
 	return city_kerbs
 
 def save_city_data(dict_city_data, output_dir = output_dir, filename = kerb_data_filename):
@@ -81,6 +88,7 @@ def city_kerb_length_totals(cities, output_dir, project_crs = merc_crs, filename
 	for city_name in cities:
 		city_data = os.path.join(output_dir, city_name, filename)
 		if os.path.exists(city_data)==False:
+			print("Path not found for {}".format(city_name))
 			continue
 
 		gdfCityKerb = gpd.read_file(city_data)
@@ -95,6 +103,38 @@ def city_kerb_length_totals(cities, output_dir, project_crs = merc_crs, filename
 	return pd.DataFrame(totals)
 
 
+############################
+#
+#
+# Get city kerbs data
+#
+#
+############################
+
+# Cities identified in Rhoads et al as having open pavement datasets available
+rhoads_cities = ['Denver', 'Montreal', 'Washington D.C.', 'Boston', 'New York', 'Buenos Aires', 'Bogot', 'Brussels', 'Barcelona', 'Paris']
+
+city_kerbs = get_kerbs_for_multiple_cities(cities)
+save_city_data(city_kerbs)
+
+# Now calculate total length covered by kerbs
+dfKerbLengths = city_kerb_length_totals(cities, output_dir = output_dir)
+dfKerbLengths.to_csv(os.path.join(output_dir, "rhoads_city_kerb_totals.csv"), index=False)
+
+
+
+
+# Load world cities data, access from https://data.london.gov.uk/dataset/global-city-population-estimates
+dfCityPop = pd.read_csv("../data/world/global-city-population-estimates.csv", encoding_errors = 'replace')
+
+# Filter to select just top n cities per country
+n = 2
+dfCityPop = dfCityPop.groupby("Country or area").apply(lambda df: df.sort_values(by='2020').iloc[:min(df.shape[0], n)])
+dfCityPop['nm_cntry'] = dfCityPop['Urban Agglomeration'] + ", " + dfCityPop['Country or area']
+
+countries = ['United Kingdom', 'France', 'Spain', 'Japan', 'Germany', 'China', 'United States of America', 'Columbia', 'Chile', 'Iraq', 'Egypt']
+
+cities = dfCityPop.loc[ dfCityPop['Country or area'].isin(countries), 'nm_cntry'].values
 
 
 city_kerbs = get_kerbs_for_multiple_cities(cities)
@@ -102,5 +142,4 @@ save_city_data(city_kerbs)
 
 # Now calculate total length covered by kerbs
 dfKerbLengths = city_kerb_length_totals(cities, output_dir = output_dir)
-dfKerbLengths.to_file(os.path.join(output_dir, "city_kerb_totals.csv"), index=False)
-
+dfKerbLengths.to_csv(os.path.join(output_dir, "world_city_kerb_totals.csv"), index=False)
