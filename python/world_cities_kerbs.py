@@ -1,5 +1,5 @@
 # Scrape OSM data for multiple cities
-
+import json
 import os
 import numpy as np
 import pandas as pd
@@ -7,6 +7,7 @@ import geopandas as gpd
 import osmnx as ox
 import networkx as nx
 import itertools
+from shapely.geometry import Polygon
 
 import osm_streetspace_utils as ossutils
 
@@ -285,3 +286,142 @@ f, ax = kerb_bar_chart(kerb_lengths, 'Total OSM Kerb Length', 'm', 'Total OSM Ke
 
 kerb_lengths_per_c = dfKerbLengthsRhoads.set_index('city')['kerb_length_per_cluster'].sort_values(ascending=False)
 f, ax = kerb_bar_chart(kerb_lengths_per_c, 'OSM Kerb Length Per Cluster', 'm', 'OSM Kerb Length Per Cluster', "../images/rhoads_kerb_lengths_per_cluster.png")
+
+
+
+###############################
+#
+#
+# Cluster OSM entries based on geometry, tags and other attributes
+#
+#
+# Intention is to see if there are distinct types of geographic features mapped as curbs
+#
+###############################
+
+
+# Load the data
+city_kerbs = load_city_kerb_data(rhoads_cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename)
+
+# Join into a single dataframe
+dfCityKerbs = pd.DataFrame()
+for k, v in city_kerbs.items():
+	dfCityKerbs = pd.concat([dfCityKerbs, v])
+
+dfCityKerbs.index = np.arange(dfCityKerbs.shape[0])
+
+# Need to merge linestrings that form a closed loop into polygons.
+def closed_linestring_to_polygon(l):
+	cs = list(l.coords)
+	if (cs[0]==cs[-1]) & (len(cs)>1):
+		# Linestring start and end coord match so is closed. Convert to polygon
+		try:
+			g = Polygon(cs)
+		except Exception as e:
+			print(cs)
+			print(e)
+			return None
+		assert cs==list(g.exterior.coords)
+		return g
+	else:
+		return l
+
+dfCityKerbs['new_geometry'] = dfCityKerbs['geometry'].map(lambda g: closed_linestring_to_polygon(g))
+
+# Record geometry type as 1 hot encoding, will drop Points, so only need to record if polygon or not
+# Also record area of shape and length
+
+dfCityKerbs['is_polygon'] = dfCityKerbs['new_geometry'].map(lambda g: g.type == 'Polygon')
+dfCityKerbs['osm_length'] = dfCityKerbs['new_geometry'].length
+dfCityKerbs['osm_area'] = dfCityKerbs['new_geometry'].area
+
+# Collect all tags into one list -> tuple
+tag_keys = dfCityKerbs['tags'].map(lambda d: list(json.loads(d).keys())).values
+tag_keys = [i for i in tag_keys]
+tks = np.concatenate(tag_keys)
+unique_keys = tuple(set(tks))
+
+# Get index of each items tag in that tuple
+# Create vector length of tuple, set index values to 1
+# Create df from this and merge into main df
+
+tags = dfCityKerbs['tags'].map(lambda d: list(json.loads(d).keys())).to_dict()
+tag_vectors = []
+for k, t in tags.items():
+	indices = list(map(unique_keys.index, t))
+	v = np.zeros(len(unique_keys))
+	v[indices]=1
+	tag_vectors.append(v)
+
+dfTV = pd.DataFrame(index = tags.keys(), data = tag_vectors, columns = unique_keys)
+
+dfCityKerbsTags = pd.merge(dfCityKerbs, dfTV, left_index=True, right_index=True, indicator=True)
+
+# Drop tag columns where only 1,2, or 3 osm items ahve this tag, these cols don;t give much information
+tag_sums = dfCityKerbsTags.loc[:, unique_keys].sum()
+tags_to_drop = tag_sums.loc[ tag_sums<4].index
+dfCityKerbsTags.drop(tags_to_drop, axis=1, inplace=True)
+tags_cols = [i for i in unique_keys if i not in tags_to_drop]
+
+# Drop Point features
+dfCityKerbsTags = dfCityKerbsTags[dfCityKerbsTags['new_geometry'].type!='Point']
+
+
+# Now start clustering
+
+# Filter to just columns to use in clustering
+categorical_cols = ['is_polygon', 'area_name']
+numerical_cols = ['osm_length','osm_area']
+
+# Length and area data is highly skewed. Try min max rescaling
+dfCityKerbsTags['osm_length_mm'] = (dfCityKerbsTags['osm_length'] - dfCityKerbsTags['osm_length'].min()) / (dfCityKerbsTags['osm_length'].max() - dfCityKerbsTags['osm_length'].min())
+dfCityKerbsTags['osm_area_mm'] = (dfCityKerbsTags['osm_area'] - dfCityKerbsTags['osm_area'].min()) / (dfCityKerbsTags['osm_area'].max() - dfCityKerbsTags['osm_area'].min())
+
+
+
+# Calculate Gower distances between points
+from sklearn.neighbors import DistanceMetric
+
+# Need to check Gower distance for tag categorical cols is correct.
+def gower_distance(df, tags_cols, categorical_cols, numerical_cols):
+    individual_variable_distances = []
+
+    # First get feature distances from tags cols
+    tag_features = df.loc[:, tags_cols]
+    feature_dist = DistanceMetric.get_metric('dice').pairwise(tag_features)
+    individual_variable_distances.append(feature_dist)
+
+    # Then get feature distances for the other categorical columns and numerical columns
+    for c in categorical_cols+numerical_cols:
+    	feature = df.loc[:, [c]]
+
+    	if c in categorical_cols:
+	    	feature_dist = DistanceMetric.get_metric('dice').pairwise(pd.get_dummies(feature))
+
+	    	if c == 'is_polygon':
+	    		# get nan from dividing by zero when 
+	    		feature_dist = np.where(pd.isna(feature_dist), 0, feature_dist)
+	    else:
+			feature_dist = DistanceMetric.get_metric('manhattan').pairwise(feature) / max(np.ptp(feature.values),1)
+		individual_variable_distances.append(feature_dist)
+
+    return np.array(individual_variable_distances).mean(0)
+
+dfCityKerbsTags.index = np.arange(dfCityKerbsTags.shape[0])
+distances = gower_distance(dfCityKerbsTags, tags_cols, categorical_cols, numerical_cols)
+
+
+# Now cluster with these distances and calculate cluster silhouettes
+from sklearn_extra.cluster import KMedoids
+from sklearn.metrics import silhouette_score
+
+scores = {'k':[], 's':[]}
+for repetitions in range(5):
+	for k in range(2, 11):
+		kmedoids = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances)
+		s = silhouette_score(distances, kmedoids.labels_, metric='precomputed', sample_size=None, random_state=None)
+		scores['k'].append(k)
+		scores['s'].append(s)
+dfScores = pd.DataFrame(scores).groupby('k').mean().reset_index()
+
+# Calculate silhouette score
