@@ -196,6 +196,13 @@ def city_kerb_clusters_from_pairwise_distances(city_pairwise_dist, d_threshold =
 	return clusters
 
 
+###############################
+#
+#
+# Functions for figures
+#
+#
+###############################
 def kerb_bar_chart(series, series_label, ylabel, title, img_path):
     f, ax = plt.subplots(figsize = (10,10))
     p1 = ax.bar(series.index, series, 0.9, label=series_label)
