@@ -61,6 +61,7 @@ p_lon1 <- lon_lines %>%
    ggtitle('London')
 p_lon1
 ```
+
 Barcelona
 
 ```{r}
@@ -101,6 +102,7 @@ p_bar1 <- bar_lines %>%
    ggtitle('Barcelona')
 p_bar1
 ```
+
 Paris
 
 ```{r}
@@ -141,6 +143,7 @@ p_par1 <- par_lines %>%
    ggtitle('Paris')
 p_par1
 ```
+
 
 New York
 
