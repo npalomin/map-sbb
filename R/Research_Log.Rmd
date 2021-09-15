@@ -1,0 +1,45 @@
+---
+title: "Mapping space between buildings"
+author: "HG, NP, OS"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+Original Publish Date: 26 May, 2021 <br> Updated on: `r format(Sys.time(), '%d %B, %Y')`
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{=html}
+<style>
+* {font-family: "Trebuchet MS"}h1{font-size: 190%}h2{font-size: 160%}h3{font-size: 150%}h4{font-size: 130%}h5{font-size: 110%}h6{font-size: 90%}
+.r code {
+    white-space: pre;
+}
+</style>
+```
+## Introduction
+
+This report summarises the outputs of data reviews and analysis for the Mapping space between buildings Research.
+
+## Summary table
+
+The table shows an hyper-linked name of the output, a general comment and a snapshot of research outputs including tools and data diagnosis reports (draft and final version analysis). The table is organised according to estimated chronological order from newest to oldest.
+
++---+---------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|   | Output                                                                                                                          | Comment                                                                                                               | Snapshot[.](https://Lorem/ipsum/dolor/sit/amet,/consectetur/adipiscing/elit,/sed/do/eiusmod/tempor/incididunt/ut/labore/et/dolore/magna/aliqua./Ut/enim/ad/minim/veniam,/quis/nostrud/exercitation/velit.html) |
++===+=================================================================================================================================+=======================================================================================================================+================================================================================================================================================================================================================+
+| 4 | Mapping of OSM [footways](https://npalomin.github.io/map-sbb/R/OSM_footways.html)                                               | 4 cities                                                                                                              | ![](images/paste-EA60133A.png)                                                                                                                                                                                 |
++---+---------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 3 | Display of "Footpath" centre lines in [OSM](images/barcelona_OSM_footway_lines.png) (Barcelona)                                 | Footway or footpath?                                                                                                  | ![](images/paste-3BAF7CC5.png)                                                                                                                                                                                 |
++---+---------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 2 | Vector data [overlay](images/barcelona_Satellite_vector%20overlay.jpg) on satellite imagery (Barcelona)                         | Denotes the lack of updates in official data                                                                          | ![](images/paste-FC771233.png)                                                                                                                                                                                 |
++---+---------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 1 | [Sample of Barcelona topographic data](https://github.com/npalomin/map-sbb/blob/main/data/sample_Barcelona_topographic.geojson) | Data is openly accessible from <http://www.icc.cat/appdownloads/?c=dlftopo1m#>                                        | ![](images/paste-CB91F0FE.png)                                                                                                                                                                                 |
+|   |                                                                                                                                 |                                                                                                                       |                                                                                                                                                                                                                |
+|   |                                                                                                                                 | Lines, points and polygons features are displayed with attributes that allow to derive curb lines (streetspace lines) |                                                                                                                                                                                                                |
++---+---------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+## URLs
