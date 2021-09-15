@@ -1,0 +1,190 @@
+---
+title: "OSM footways"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("osmdata")
+library(osmdata)
+#install.packages('Rcpp')
+library(Rcpp)
+library(tmap)
+library(ggplot2)
+library(ggthemes)
+library(patchwork)
+library(sf)
+```
+
+## Get OSM data
+
+osmdata uses the overpass API to download  
+London
+
+```{r}
+london <- opq(bbox = 'greater london uk') %>%
+  add_osm_feature(key = 'highway', value = 'footway') %>%
+  osmdata_sf()
+```
+
+```{r}
+print(london)
+```
+
+```{r}
+lon_lines <- london[["osm_lines"]]
+```
+
+```{r}
+b_lon <- lon_lines %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_centroid() %>%
+  st_transform(crs=3857) %>%
+  st_buffer(5000) %>% # buffered distance from centroid
+  st_bbox() %>% 
+  st_as_sfc() %>%
+  st_transform(crs=4326)
+```
+
+```{r}
+p_lon1 <- lon_lines %>%
+  st_crop(., b_lon) %>%
+  ggplot() +
+  geom_sf(colour="tomato") +
+  theme_tufte() +
+  theme(axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+   ggtitle('London')
+p_lon1
+```
+Barcelona
+
+```{r}
+barce <- opq(bbox = 'barcelona spain') %>%
+  add_osm_feature(key = 'highway', value = 'footway') %>%
+  osmdata_sf()
+```
+
+```{r}
+print(barce)
+```
+
+```{r}
+bar_lines <- barce[["osm_lines"]]
+```
+
+```{r}
+b_bar <- bar_lines %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_centroid() %>%
+  st_transform(crs=3857) %>%
+  st_buffer(5000) %>% # buffered distance from centroid
+  st_bbox() %>% 
+  st_as_sfc() %>%
+  st_transform(crs=4326)
+```
+
+```{r}
+p_bar1 <- bar_lines %>%
+  st_crop(., b_bar) %>%
+  ggplot() +
+  geom_sf(colour="tomato") +
+  theme_tufte() +
+  theme(axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+   ggtitle('Barcelona')
+p_bar1
+```
+Paris
+
+```{r}
+paris <- opq(bbox = 'paris france') %>%
+  add_osm_feature(key = 'highway', value = 'footway') %>%
+  osmdata_sf()
+```
+
+```{r}
+print(paris)
+```
+
+```{r}
+par_lines <- paris[["osm_lines"]]
+```
+
+```{r}
+b_par <- par_lines %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_centroid() %>%
+  st_transform(crs=3857) %>%
+  st_buffer(5000) %>% # buffered distance from centroid
+  st_bbox() %>% 
+  st_as_sfc() %>%
+  st_transform(crs=4326)
+```
+
+```{r}
+p_par1 <- par_lines %>%
+  st_crop(., b_par) %>%
+  ggplot() +
+  geom_sf(colour="tomato") +
+  theme_tufte() +
+  theme(axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+   ggtitle('Paris')
+p_par1
+```
+
+New York
+
+```{r}
+ny <- opq(bbox = 'new york usa') %>%
+  add_osm_feature(key = 'highway', value = 'footway') %>%
+  osmdata_sf()
+```
+
+```{r}
+print(ny)
+```
+
+```{r}
+ny_lines <- ny[["osm_lines"]]
+```
+
+```{r}
+b_ny <- ny_lines %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_centroid() %>%
+  st_transform(crs=3857) %>%
+  st_buffer(5000) %>% # buffered distance from centroid
+  st_bbox() %>% 
+  st_as_sfc() %>%
+  st_transform(crs=4326)
+```
+
+```{r}
+p_ny1 <- ny_lines %>%
+  st_crop(., b_ny) %>%
+  ggplot() +
+  geom_sf(colour="tomato") +
+  theme_tufte() +
+  theme(axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+   ggtitle('New York')
+p_ny1
+```
+
+
+```{r fig.height=7, fig.width=7}
+(p_lon1 + p_bar1) / (p_par1 + p_ny1) 
+```
+
