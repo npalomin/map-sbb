@@ -462,6 +462,21 @@ dfSil.to_csv('silhouette_scores.csv', index=False)
 # SSE of clusters - cant get bc of pam and kedoids
 #
 
+#
+# Record cluster membership for a few different ks (2,3,7) in the gdf so that clusters can be mapped.
+#
+kmedoids2 = KMedoids(n_clusters=2, metric='precomputed', method='pam', init='random', max_iter=300, random_state=1).fit(distances)
+kmedoids3 = KMedoids(n_clusters=3, metric='precomputed', method='pam', init='random', max_iter=300, random_state=1).fit(distances)
+kmedoids7 = KMedoids(n_clusters=7, metric='precomputed', method='pam', init='random', max_iter=300, random_state=1).fit(distances)
+
+dfCityKerbsTags['cluster2'] = kmedoids2.labels_
+dfCityKerbsTags['cluster3'] = kmedoids3.labels_
+dfCityKerbsTags['cluster7'] = kmedoids7.labels_
+
+# Drop unwanted columns and save
+dfCityKerbsTags.drop(['_merge'], axis=1, inplace=True)
+dfCityKerbsTags.to_file("..\\data\\world\\city_kerbs_with_clusters.gpkg", driver='GPKG')
+
 
 # Use rand scores to compare cluster membership
 k = 2
