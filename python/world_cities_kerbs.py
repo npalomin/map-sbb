@@ -166,7 +166,7 @@ def kerb_bar_chart(series, series_label, ylabel, title, img_path):
 ############################
 
 '''
-rhoads_city_kerbs = osmu.get_kerbs_for_multiple_cities(rhoads_cities)
+rhoads_city_kerbs = osmu.get_kerbs_for_multiple_cities(rhoads_cities, merc_crs)
 osmu.save_city_data(city_kerbs, kerb_data_filename, output_dir)
 
 # Now calculate total length covered by kerbs
@@ -183,7 +183,7 @@ dfCityPop['nm_cntry'] = dfCityPop['Urban Agglomeration'] + ", " + dfCityPop['Cou
 
 cities = dfCityPop.loc[ dfCityPop['Country or area'].isin(countries), 'nm_cntry'].values
 
-city_kerbs = osmu.get_kerbs_for_multiple_cities(cities)
+city_kerbs = osmu.get_kerbs_for_multiple_cities(cities, merc_crs)
 osmu.save_city_data(city_kerbs, kerb_data_filename, output_dir)
 
 # Now calculate total length covered by kerbs
