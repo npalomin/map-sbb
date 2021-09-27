@@ -468,20 +468,20 @@ k = 2
 repetitions=1
 kmedoids = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances)
 kmedoids_no_name = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances_no_name)
-score = rand_score(kmedoids.labels_, kmedoids_no_name.labels_) # 0.8000758172981858 area name doesn't affect cluster much, but does effect more than tags
+score = sklearn.metrics.rand_score(kmedoids.labels_, kmedoids_no_name.labels_) # 0.8000758172981858 area name doesn't affect cluster much, but does effect more than tags
 print("\nRand Score - clusters vs clusters without area name {}".format(score))
 
 kmedoids_no_tags = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances_no_tags)
-score = rand_score(kmedoids.labels_, kmedoids_no_tags.labels_) # 0.8000758172981858 area name doesn't affect cluster much, but does effect more than tags
+score = sklearn.metrics.rand_score(kmedoids.labels_, kmedoids_no_tags.labels_) # 0.8000758172981858 area name doesn't affect cluster much, but does effect more than tags
 print("\nRand Score - clusters vs clusters without tags {}".format(score))
 
 kmedoids_numeric = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances_no_tags)
-score1 = rand_score(kmedoids.labels_, kmedoids_numeric.labels_)
+score1 = sklearn.metrics.rand_score(kmedoids.labels_, kmedoids_numeric.labels_)
 print("\nRand Score - orig clusters vs numeric only clusters: {}".format(score1)) # 0.8887329015421521
 
 kmedoids_tags = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances_tags)
-score1 = rand_score(kmedoids.labels_, kmedoids_tags.labels_)
-score2 = rand_score(kmedoids_tags.labels_, kmedoids_numeric.labels_)
+score1 = sklearn.metrics.rand_score(kmedoids.labels_, kmedoids_tags.labels_)
+score2 = sklearn.metrics.rand_score(kmedoids_tags.labels_, kmedoids_numeric.labels_)
 print("\nRand Score - orig clusters vs tags only clusters: {}".format(score1)) # 0.
 print("Rand Score - clusters tags vs numeric only clusters: {}".format(score2)) # 1.0
 
@@ -489,20 +489,20 @@ k = 3
 repetitions=1
 kmedoids = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances)
 kmedoids_no_name = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances_no_name)
-score = rand_score(kmedoids.labels_, kmedoids_no_name.labels_) # 0.8000758172981858 area name doesn't affect cluster much, but does effect more than tags
+score = sklearn.metrics.rand_score(kmedoids.labels_, kmedoids_no_name.labels_) # 0.8000758172981858 area name doesn't affect cluster much, but does effect more than tags
 print("\nRand Score - clusters vs clusters without area name {}".format(score))
 
 kmedoids_no_tags = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances_no_tags)
-score = rand_score(kmedoids.labels_, kmedoids_no_tags.labels_) # 0.8000758172981858 area name doesn't affect cluster much, but does effect more than tags
+score = sklearn.metrics.rand_score(kmedoids.labels_, kmedoids_no_tags.labels_) # 0.8000758172981858 area name doesn't affect cluster much, but does effect more than tags
 print("\nRand Score - clusters vs clusters without tags {}".format(score))
 
 kmedoids_numeric = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances_no_tags)
-score1 = rand_score(kmedoids.labels_, kmedoids_numeric.labels_)
+score1 = sklearn.metrics.rand_score(kmedoids.labels_, kmedoids_numeric.labels_)
 print("\nRand Score - orig clusters vs numeric only clusters: {}".format(score1)) # 0.8887329015421521
 
 kmedoids_tags = KMedoids(n_clusters=k, metric='precomputed', method='pam', init='random', max_iter=300, random_state=repetitions*k).fit(distances_tags)
-score1 = rand_score(kmedoids.labels_, kmedoids_tags.labels_)
-score2 = rand_score(kmedoids_tags.labels_, kmedoids_numeric.labels_)
+score1 = sklearn.metrics.rand_score(kmedoids.labels_, kmedoids_tags.labels_)
+score2 = sklearn.metrics.rand_score(kmedoids_tags.labels_, kmedoids_numeric.labels_)
 print("\nRand Score - orig clusters vs tags only clusters: {}".format(score1)) # 0.
 print("Rand Score - clusters tags vs numeric only clusters: {}".format(score2)) # 1.0
 
@@ -521,8 +521,6 @@ dfLogit.drop(categorical_cols, axis=1, inplace=True)
 # Add in cluster labels
 dfLogit['cluster'] = kmedoids.labels_
 import statsmodels.api as sm
-from sklearn import linear_model
-from sklearn.metrics import rand_score 
 
 Ycol = 'cluster'
 Xcols = [c for c in dfLogit.columns if c != Ycol]
