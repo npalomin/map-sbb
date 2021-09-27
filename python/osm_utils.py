@@ -174,7 +174,7 @@ def tag_bar_chart(series, series_label, ylabel, img_path, xtick_rotation = 30, x
 
 
 def get_way_data_for_single_city(city_name, tags, project_crs):
-    result = ossutils.osm_ways_in_geocode_area(city_name, tags)
+    result = osm_ways_in_geocode_area(city_name, tags)
 
     if result['data'] is None:
         pass
