@@ -3,6 +3,7 @@
 
 # Folders
 python/cache/*
+python/_pycache_/*
 
 # Files
 .Rproj.user
