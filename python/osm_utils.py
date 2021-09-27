@@ -206,7 +206,9 @@ def get_ways_for_multiple_cities(city_names, tags, project_crs = merc_crs):
 
 def get_kerbs_for_multiple_cities(city_names, project_crs = merc_crs):
     return get_ways_for_multiple_cities(city_names, ["barrier=kerb", "kerb"],  project_crs = merc_crs)
-    return get_ways_for_multiple_cities(city_names, ["barrier=kerb", "kerb"],  project_crs = merc_crs)
+
+def get_ped_footways_for_multiple_cities(city_names, project_crs = merc_crs):
+    return get_ways_for_multiple_cities(city_names, ["highway=footway"],  project_crs = merc_crs)
 
 def save_city_data(dict_city_data, output_dir = output_dir, filename = kerb_data_filename):
     
