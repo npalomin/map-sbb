@@ -173,8 +173,8 @@ def tag_bar_chart(series, series_label, ylabel, img_path, xtick_rotation = 30, x
     return f, ax
 
 
-def get_kerb_data_for_single_city(city_name, project_crs = merc_crs):
-    result = ossutils.osm_ways_in_geocode_area(city_name, ["barrier=kerb", "kerb"])
+def get_way_data_for_single_city(city_name, tags, project_crs = merc_crs):
+    result = ossutils.osm_ways_in_geocode_area(city_name, tags)
 
     if result['data'] is None:
         pass
@@ -198,7 +198,7 @@ def get_kerbs_for_multiple_cities(city_names, project_crs = merc_crs):
 
     for city_name in city_names:
         try:
-            result = get_kerb_data_for_single_city(city_name, project_crs = project_crs)
+            result = get_way_data_for_single_city(city_name, ["barrier=kerb", "kerb"], project_crs = project_crs)
             city_kerbs[city_name] = result
         except Exception as e:
             print(city_name, e)
