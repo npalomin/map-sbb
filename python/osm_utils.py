@@ -192,7 +192,7 @@ def get_way_data_for_single_city(city_name, tags, project_crs = merc_crs):
 
     return result
 
-def get_ways_for_multiple_cities(city_names, tags project_crs = merc_crs):
+def get_ways_for_multiple_cities(city_names, tags, project_crs = merc_crs):
 
     city_kerbs = {}
 
@@ -204,7 +204,8 @@ def get_ways_for_multiple_cities(city_names, tags project_crs = merc_crs):
             print(city_name, e)
     return city_kerbs
 
-def get_kerbs_for_multiple_cities(city_names, ):
+def get_kerbs_for_multiple_cities(city_names, project_crs = merc_crs):
+    return get_ways_for_multiple_cities(city_names, ["barrier=kerb", "kerb"],  project_crs = merc_crs)
     return get_ways_for_multiple_cities(city_names, ["barrier=kerb", "kerb"],  project_crs = merc_crs)
 
 def save_city_data(dict_city_data, output_dir = output_dir, filename = kerb_data_filename):
