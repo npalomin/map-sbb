@@ -192,17 +192,20 @@ def get_way_data_for_single_city(city_name, tags, project_crs = merc_crs):
 
     return result
 
-def get_kerbs_for_multiple_cities(city_names, project_crs = merc_crs):
+def get_ways_for_multiple_cities(city_names, tags project_crs = merc_crs):
 
     city_kerbs = {}
 
     for city_name in city_names:
         try:
-            result = get_way_data_for_single_city(city_name, ["barrier=kerb", "kerb"], project_crs = project_crs)
+            result = get_way_data_for_single_city(city_name, tags, project_crs = project_crs)
             city_kerbs[city_name] = result
         except Exception as e:
             print(city_name, e)
     return city_kerbs
+
+def get_kerbs_for_multiple_cities(city_names, ):
+    return get_ways_for_multiple_cities(city_names, ["barrier=kerb", "kerb"],  project_crs = merc_crs)
 
 def save_city_data(dict_city_data, output_dir = output_dir, filename = kerb_data_filename):
     
