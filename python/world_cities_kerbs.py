@@ -94,7 +94,7 @@ def save_city_data(dict_city_data, output_dir = output_dir, filename = kerb_data
 
     return True
 
-def load_city_kerb_data(cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename):
+def load_city_data(cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename):
     city_kerbs = {}
 
     for city_name in cities:
@@ -121,7 +121,7 @@ def city_kerb_length_totals(cities, output_dir, project_crs = merc_crs, filename
 
     totals = {'city':[], 'kerb_length':[], 'city_area':[]}
 
-    city_kerbs = load_city_kerb_data(cities, output_dir, project_crs, filename)
+    city_kerbs = load_city_data(cities, output_dir, project_crs, filename)
 
     for city_name, gdfCityKerb in city_kerbs.items():
         if gdfCityKerb.shape[0]==0:
@@ -161,7 +161,7 @@ def multiple_cities_kerb_pairwise_distances(cities, output_dir, project_crs = me
 
     city_pairwise_dist = {}
 
-    city_kerbs = load_city_kerb_data(cities, output_dir, project_crs, filename)
+    city_kerbs = load_city_data(cities, output_dir, project_crs, filename)
 
     for city_name, gdfCityKerbs in city_kerbs.items():
         if gdfCityKerbs.shape[0]==0:
@@ -313,7 +313,7 @@ f, ax = kerb_bar_chart(kerb_lengths_per_c, 'OSM Kerb Length Per Cluster', 'm', '
 
 
 # Load the data
-city_kerbs = load_city_kerb_data(rhoads_cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename)
+city_kerbs = load_city_data(rhoads_cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename)
 
 # Join into a single dataframe
 dfCityKerbs = pd.DataFrame()
