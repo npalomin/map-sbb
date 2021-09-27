@@ -41,87 +41,12 @@ countries = ['United Kingdom', 'France', 'Spain', 'Japan', 'Germany', 'China', '
 #
 #
 ################################
-def get_kerb_data_for_single_city(city_name, project_crs = merc_crs):
-    result = ossutils.osm_ways_in_geocode_area(city_name, ["barrier=kerb", "kerb"])
-
-    if result['data'] is None:
-        pass
-    elif result['data'].shape[0]==0:
-        result['data'] = None
-        result['note'] = 'Empty dataframe. No osm data found.'
-    else:
-        result['data'] = result['data'].to_crs(project_crs)
-
-        # Calculate area of gdf and add into gdf
-        bb = result['data'].total_bounds
-        area = ( abs(bb[0]-bb[2]) * abs(bb[1]-bb[3]))
-        result['data']['bb_area'] = area
-        result['data']['area_name'] = city_name
-
-    return result
-
-def get_kerbs_for_multiple_cities(city_names, project_crs = merc_crs):
-
-    city_kerbs = {}
-
-    for city_name in city_names:
-        try:
-            result = get_kerb_data_for_single_city(city_name, project_crs = project_crs)
-            city_kerbs[city_name] = result
-        except Exception as e:
-            print(city_name, e)
-    return city_kerbs
-
-def save_city_data(dict_city_data, output_dir = output_dir, filename = kerb_data_filename):
-    
-    for city_name, city_result in dict_city_data.items():
-        #city_name_clean = city_name.replace(".","")
-        city_dir = os.path.join(output_dir, city_name)
-        if os.path.exists(city_dir)==False:
-            os.mkdir(city_dir)
-
-        if city_result['data'] is not None:
-            # Remove columns that contain lists - these tend to be columns that contain information about the component nodes of the way
-            for col in city_result['data'].columns:
-                if city_result['data'][col].map(lambda x: isinstance(x, (list, tuple))).any():
-                    city_result['data'].drop(col, axis=1, inplace=True)
-                    print("'{}' column removed from {} data".format(col, city_name))
-            
-            city_result['data'].to_file(os.path.join(city_dir, filename), driver = "GPKG")
-        else:
-            with open(os.path.join(city_dir, 'note.txt'), 'w') as f:
-                f.write(city_result['note'])
-
-    return True
-
-def load_city_data(cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename):
-    city_kerbs = {}
-
-    for city_name in cities:
-        gdfCityKerb = gpd.GeoDataFrame()
-        city_data_path = os.path.join(output_dir, city_name, filename)
-        if os.path.exists(city_data_path)==False:
-            note_path = os.path.join(output_dir, city_name, 'note.txt')
-            note = None
-            with open(note_path, 'r') as f:
-                note = f.readline()
-            print("{}: {}".format(city_name, note))
-
-            if 'Empty dataframe' in note:
-                city_kerbs[city_name] = gdfCityKerb
-            continue
-
-        gdfCityKerb = gpd.read_file(city_data_path)
-        gdfCityKerb = gdfCityKerb.to_crs(project_crs)
-        city_kerbs[city_name] = gdfCityKerb
-
-    return city_kerbs
 
 def city_kerb_length_totals(cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename):
 
     totals = {'city':[], 'kerb_length':[], 'city_area':[]}
 
-    city_kerbs = load_city_data(cities, output_dir, project_crs, filename)
+    city_kerbs = ossutils.load_city_data(cities, output_dir, project_crs, filename)
 
     for city_name, gdfCityKerb in city_kerbs.items():
         if gdfCityKerb.shape[0]==0:
@@ -161,7 +86,7 @@ def multiple_cities_kerb_pairwise_distances(cities, output_dir, project_crs = me
 
     city_pairwise_dist = {}
 
-    city_kerbs = load_city_data(cities, output_dir, project_crs, filename)
+    city_kerbs = ossutils.load_city_data(cities, output_dir, project_crs, filename)
 
     for city_name, gdfCityKerbs in city_kerbs.items():
         if gdfCityKerbs.shape[0]==0:
@@ -241,8 +166,8 @@ def kerb_bar_chart(series, series_label, ylabel, title, img_path):
 ############################
 
 '''
-rhoads_city_kerbs = get_kerbs_for_multiple_cities(rhoads_cities)
-save_city_data(city_kerbs)
+rhoads_city_kerbs = ossutils.get_kerbs_for_multiple_cities(rhoads_cities)
+ossutils.save_city_data(city_kerbs)
 
 # Now calculate total length covered by kerbs
 dfKerbLengthsRhoads = city_kerb_length_totals(rhoads_cities, output_dir = output_dir)
@@ -258,8 +183,8 @@ dfCityPop['nm_cntry'] = dfCityPop['Urban Agglomeration'] + ", " + dfCityPop['Cou
 
 cities = dfCityPop.loc[ dfCityPop['Country or area'].isin(countries), 'nm_cntry'].values
 
-city_kerbs = get_kerbs_for_multiple_cities(cities)
-save_city_data(city_kerbs)
+city_kerbs = ossutils.get_kerbs_for_multiple_cities(cities)
+ossutils.save_city_data(city_kerbs)
 
 # Now calculate total length covered by kerbs
 dfKerbLengths = city_kerb_length_totals(cities, output_dir = output_dir)
@@ -313,7 +238,7 @@ f, ax = kerb_bar_chart(kerb_lengths_per_c, 'OSM Kerb Length Per Cluster', 'm', '
 
 
 # Load the data
-city_kerbs = load_city_data(rhoads_cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename)
+city_kerbs = ossutils.load_city_data(rhoads_cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename)
 
 # Join into a single dataframe
 dfCityKerbs = pd.DataFrame()
