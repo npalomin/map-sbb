@@ -173,7 +173,7 @@ def tag_bar_chart(series, series_label, ylabel, img_path, xtick_rotation = 30, x
     return f, ax
 
 
-def get_way_data_for_single_city(city_name, tags, project_crs = merc_crs):
+def get_way_data_for_single_city(city_name, tags, project_crs):
     result = ossutils.osm_ways_in_geocode_area(city_name, tags)
 
     if result['data'] is None:
@@ -192,25 +192,25 @@ def get_way_data_for_single_city(city_name, tags, project_crs = merc_crs):
 
     return result
 
-def get_ways_for_multiple_cities(city_names, tags, project_crs = merc_crs):
+def get_ways_for_multiple_cities(city_names, tags, project_crs):
 
     city_kerbs = {}
 
     for city_name in city_names:
         try:
-            result = get_way_data_for_single_city(city_name, tags, project_crs = project_crs)
+            result = get_way_data_for_single_city(city_name, tags, project_crs)
             city_kerbs[city_name] = result
         except Exception as e:
             print(city_name, e)
     return city_kerbs
 
-def get_kerbs_for_multiple_cities(city_names, project_crs = merc_crs):
-    return get_ways_for_multiple_cities(city_names, ["barrier=kerb", "kerb"],  project_crs = merc_crs)
+def get_kerbs_for_multiple_cities(city_names, project_crs):
+    return get_ways_for_multiple_cities(city_names, ["barrier=kerb", "kerb"],  project_crs)
 
-def get_ped_footways_for_multiple_cities(city_names, project_crs = merc_crs):
-    return get_ways_for_multiple_cities(city_names, ["highway=footway"],  project_crs = merc_crs)
+def get_footways_for_multiple_cities(city_names, project_crs):
+    return get_ways_for_multiple_cities(city_names, ["highway=footway"],  project_crs)
 
-def save_city_data(dict_city_data, output_dir = output_dir, filename = kerb_data_filename):
+def save_city_data(dict_city_data, filename, output_dir):
     
     for city_name, city_result in dict_city_data.items():
         #city_name_clean = city_name.replace(".","")
@@ -232,7 +232,7 @@ def save_city_data(dict_city_data, output_dir = output_dir, filename = kerb_data
 
     return True
 
-def load_city_data(cities, output_dir, project_crs = merc_crs, filename = kerb_data_filename):
+def load_city_data(cities, filename, output_dir, project_crs):
     city_kerbs = {}
 
     for city_name in cities:
