@@ -5,6 +5,7 @@ import osmnx as ox
 import requests
 import json
 import time
+import os
 from shapely.geometry import Polygon, Point, LineString
 
 from matplotlib import pyplot as plt
