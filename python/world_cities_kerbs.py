@@ -338,12 +338,12 @@ def closed_linestring_to_polygon(l):
     else:
         return l
 
-dfCityKerbs['new_geometry'] = dfCityKerbs['geometry'].map(lambda g: closed_linestring_to_polygon(g))
+dfCityKerbs['geometry'] = dfCityKerbs['geometry'].map(lambda g: closed_linestring_to_polygon(g))
 
 # Record geometry type as 1 hot encoding, will drop Points, so only need to record if polygon or not
 # Also record area of shape and length
-dfCityKerbs['osm_length'] = dfCityKerbs['new_geometry'].length
-dfCityKerbs['osm_area'] = dfCityKerbs['new_geometry'].area
+dfCityKerbs['osm_length'] = dfCityKerbs['geometry'].length
+dfCityKerbs['osm_area'] = dfCityKerbs['geometry'].area
 
 # Collect all tags into one list -> tuple
 tag_keys = dfCityKerbs['tags'].map(lambda d: list(json.loads(d).keys())).values
@@ -374,7 +374,7 @@ dfCityKerbsTags.drop(tags_to_drop, axis=1, inplace=True)
 tags_cols = [i for i in unique_keys if i not in tags_to_drop]
 
 # Drop Point features
-dfCityKerbsTags = dfCityKerbsTags[dfCityKerbsTags['new_geometry'].type!='Point']
+dfCityKerbsTags = dfCityKerbsTags[dfCityKerbsTags['geometry'].type!='Point']
 
 
 # Now start clustering
