@@ -26,7 +26,7 @@ cities = ['New York', 'Barcelona', 'Paris', 'London']
 #
 #
 ############################
-def point_patter_from_geometry_series(geometries):
+def point_pattern_from_geometry_series(geometries):
 	coords = np.concatenate(geometries.map(lambda g: np.array(g.coords)).to_list())
 	return pointpats.PointPattern(coords)
 
@@ -66,8 +66,8 @@ dfFootways = dfFootways.loc[ dfFootways['geometry'].type=='LineString']
 dfKerbs = dfKerbs.loc[ dfKerbs['geometry'].type=='LineString']
 
 # Get point patterns from coordinates
-footway_pp = point_patter_from_geometry_series(dfFootways['geometry'])
-kerbs_pp = point_patter_from_geometry_series(dfKerbs['geometry'])
+footway_pp = point_pattern_from_geometry_series(dfFootways['geometry'])
+kerbs_pp = point_pattern_from_geometry_series(dfKerbs['geometry'])
 
 # Get Ripley K distributions
 footways_k = pointpats.distance_statistics.K(footway_pp, intervals=10)
