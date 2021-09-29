@@ -196,13 +196,15 @@ def get_way_data_for_single_city(city_name, tags, project_crs):
 def get_ways_for_multiple_cities(city_names, tags, project_crs):
 
     city_kerbs = {}
-
+    result = {'data':None, 'note':''}
     for city_name in city_names:
         try:
             result = get_way_data_for_single_city(city_name, tags, project_crs)
-            city_kerbs[city_name] = result
+            
         except Exception as e:
             print(city_name, e)
+            result['note'] = e
+        city_kerbs[city_name] = result
     return city_kerbs
 
 def get_kerbs_for_multiple_cities(city_names, project_crs):
@@ -235,23 +237,29 @@ def save_city_data(dict_city_data, filename, output_dir):
 
 def load_city_data(cities, filename, output_dir, project_crs):
     city_kerbs = {}
-
+    result = {'data':None, 'note':None}
+    
     for city_name in cities:
         gdfCityKerb = gpd.GeoDataFrame()
         city_data_path = os.path.join(output_dir, city_name, filename)
+        
         if os.path.exists(city_data_path)==False:
             note_path = os.path.join(output_dir, city_name, 'note.txt')
             note = None
             with open(note_path, 'r') as f:
                 note = f.readline()
             print("{}: {}".format(city_name, note))
+            result['note']=note
 
             if 'Empty dataframe' in note:
-                city_kerbs[city_name] = gdfCityKerb
+                result['data'] = gdfCityKerb
+
+            city_kerbs[city_name] = result
             continue
 
         gdfCityKerb = gpd.read_file(city_data_path)
         gdfCityKerb = gdfCityKerb.to_crs(project_crs)
-        city_kerbs[city_name] = gdfCityKerb
+        result['data']=gdfCityKerb
+        city_kerbs[city_name] = result
 
     return city_kerbs
