@@ -6,12 +6,14 @@ import pandas as pd
 import geopandas as gpd
 import pointpats
 from scipy import stats
+from shapely.geometry import Point, Polygon
 
 import osm_utils as osmu
 
 from matplotlib import pyplot as plt
 
 merc_crs = {'init' :'epsg:3857'}
+wsg_crs = {'init' :'epsg:4326'}
 output_dir = "..//data//world"
 kerb_data_filename = "kerb_data.gpkg"
 ped_footways_filename = "ped_footway.gpkg"
@@ -29,6 +31,30 @@ cities = ['New York', 'Barcelona', 'Paris', 'London']
 def point_pattern_from_geometry_series(geometries):
 	coords = np.concatenate(geometries.map(lambda g: np.array(g.coords)).to_list())
 	return pointpats.PointPattern(coords)
+
+def h3_polyfill(gdf, resolution):
+	'''Given an input geodataframe return a geodataframe of hex polygons that fill the input geometries at the given resolution
+	'''
+	gdf_h3 = gpd.GeoDataFrame([], columns = ['h3_id','h3_geometry','h3_centroid'])
+	poly_geojson = gdf.loc[ gdf['geometry'].type=='Polygon', ['geometry']].__geo_interface__
+
+	for feature in poly_geojson['features']:
+		feature_geojson = feature['geometry']
+
+		# Fill the dictionary with H3 Hexagons
+		h3_hexes = h3.polyfill_geojson(feature_geojson, resolution) 
+		for h3_hex in h3_hexes:
+			h3_geometry = Polygon(h3.h3_to_geo_boundary(h3_hex,geo_json=True))
+			h3_centroid = h3.h3_to_geo(h3_hex)
+			# Append results to dataframe
+			gdf_h3.loc[len(gdf_h3)]=[
+				h3_hex,
+				h3_geometry,
+				h3_centroid
+				]
+	gdf_h3.set_geometry("h3_geometry", inplace=True)
+	gdf_h3.crs = {'init' :'epsg:4326'}
+	return gdf_h3
 
 ############################
 #
@@ -82,8 +108,10 @@ ch = gdfAllPoints.geometry.unary_union.convex_hull
 gdfch =gpd.GeoDataFrame({'geometry':[ch]}, crs = merc_crs).to_crs(wsg_crs)
 
 # get hex grid for this polygon
-for resolution in [5,7,10]:
+for resolution in [5,7]:
 	gdf_hex = h3_polyfill(gdfch, resolution)
+	gdf_hex.to_crs(merc_crs, inplace=True)
+	gdf_hex = gdf_hex.reindex(columns = ['h3_id', 'h3_geometry'])
 	gdf_hex.to_file(os.path.join(output_dir, city, "hex_grid_{}.gpkg".format(resolution)), driver="GPKG")
 
 ############################
