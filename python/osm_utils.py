@@ -18,6 +18,10 @@ from matplotlib import pyplot as plt
 #
 ################################
 
+
+# These are methods I wrote to query OSM API and convert data to geodataframes
+# Better to use osm nx to do this.
+
 def build_geom_from_coords(coords):
     if (len(coords) > 2):
         g = LineString(coords)
@@ -78,7 +82,6 @@ def osm_ways_gdf_from_query(query, url = "http://overpass-api.de/api/interpreter
 
     return gdf
 
-
 def osm_ways_in_geocode_area(area_name, tags, url = "http://overpass-api.de/api/interpreter", osm_crs = {'init':'epsg:4326'}, min_area = 10000):
     '''Build osm query to get ways in an area.
 
@@ -133,6 +136,8 @@ def osm_ways_in_geocode_area(area_name, tags, url = "http://overpass-api.de/api/
     return output
 
 
+# Methods to aggregate tags from data queried from OSM API
+
 def aggregate_tag_data(tags):
     tag_data = {}
     for tag in tags:
@@ -158,7 +163,6 @@ def extract_key_tag_items(osm_item_tags):
             tags.append(key+":"+value)
     return tags
 
-
 def tag_bar_chart(series, series_label, ylabel, img_path, xtick_rotation = 30, xtick_fontsize = 12):
     f, ax = plt.subplots(figsize = (10,10))
 
@@ -174,8 +178,16 @@ def tag_bar_chart(series, series_label, ylabel, img_path, xtick_rotation = 30, x
     return f, ax
 
 
+# Getting data for multiple cities
+
 def get_way_data_for_single_city(city_name, tags, project_crs):
-    result = osm_ways_in_geocode_area(city_name, tags)
+
+    result = {'data':None, 'note':'', 'area_name':city_name}
+
+    result['data'] = ox.geometries.geometries_from_place(city_name, tags, which_result=None, buffer_dist=None)
+    
+    # Select only ways
+    result['data'] = result['data'].loc['way']
 
     if result['data'] is None:
         pass
@@ -189,29 +201,62 @@ def get_way_data_for_single_city(city_name, tags, project_crs):
         bb = result['data'].total_bounds
         area = ( abs(bb[0]-bb[2]) * abs(bb[1]-bb[3]))
         result['data']['bb_area'] = area
-        result['data']['area_name'] = city_name
 
     return result
 
-def get_ways_for_multiple_cities(city_names, tags, project_crs):
+def get_ways_for_multiple_cities(city_names, tags, project_crs, filename, output_dir=None):
 
-    city_kerbs = {}
-    result = {'data':None, 'note':''}
+    city_ways = {}
     for city_name in city_names:
+        result = {'data':None, 'note':'', 'area_name':city_name}
         try:
             result = get_way_data_for_single_city(city_name, tags, project_crs)
             
         except Exception as e:
             print(city_name, e)
-            result['note'] = e
-        city_kerbs[city_name] = result
-    return city_kerbs
+            result['note'] = str(e)
+        city_ways[city_name] = result
 
-def get_kerbs_for_multiple_cities(city_names, project_crs):
-    return get_ways_for_multiple_cities(city_names, ["barrier=kerb", "kerb"],  project_crs)
+        if output_dir is not None:
+            # Save the data as we go
+            save_single_city_data(result, filename, output_dir)
 
-def get_footways_for_multiple_cities(city_names, project_crs):
-    return get_ways_for_multiple_cities(city_names, ["highway=footway"],  project_crs)
+    return city_ways
+
+def get_kerbs_for_multiple_cities(city_names, project_crs, output_dir = None):
+    filename = 'kerbs.gpkg'
+    return get_ways_for_multiple_cities(city_names, {"barrier":"kerb", "kerb":""},  project_crs, filename, output_dir = output_dir)
+
+def get_footways_for_multiple_cities(city_names, project_crs, output_dir = None):
+    filename = 'footways.gpkg'
+    return get_ways_for_multiple_cities(city_names, {'footway':'sidewalk','highway':'footway'},  project_crs, filename, output_dir = output_dir)
+
+def save_single_city_data(city_result, filename, output_dir):
+    city_name = city_result['area_name']
+    city_name = city_name.replace(".","")
+    #city_name = city_name.encode('ascii', errors = 'ignore').decode()
+
+    city_dir = os.path.join(output_dir, city_name)
+    if os.path.exists(city_dir)==False:
+        os.mkdir(city_dir)
+
+    if city_result['data'] is not None:
+        # Remove columns that contain lists - these tend to be columns that contain information about the component nodes of the way
+        for col in city_result['data'].columns:
+            if city_result['data'][col].map(lambda x: isinstance(x, (list, tuple))).any():
+                city_result['data'].drop(col, axis=1, inplace=True)
+                print("'{}' column removed from {} data".format(col, city_name))
+        
+        city_result['data'].to_file(os.path.join(city_dir, filename), driver = "GPKG")
+    else:
+        with open(os.path.join(city_dir, 'note.txt'), 'w') as f:
+            note = city_result['note']
+            try:
+                f.write(note)
+            except UnicodeEncodeError as e:
+                print(note)
+
+    return True
 
 def save_city_data(dict_city_data, filename, output_dir):
     
