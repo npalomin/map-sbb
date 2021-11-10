@@ -1,0 +1,1 @@
+Nominatim could not geocode query "Najaf, Iraq" to polygonal boundaries

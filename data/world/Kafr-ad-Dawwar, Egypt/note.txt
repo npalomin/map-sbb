@@ -1,0 +1,1 @@
+Nominatim geocoder returned 0 results for query "Kafr-ad-Dawwar, Egypt"
