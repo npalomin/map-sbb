@@ -2,6 +2,7 @@
 import pandas as pd
 import geopandas as gpd
 import osmnx as ox
+import networkx as nx
 import requests
 import json
 import time
@@ -180,6 +181,48 @@ def tag_bar_chart(series, series_label, ylabel, img_path, xtick_rotation = 30, x
 
 # Getting data for multiple cities
 
+def get_graph_data_for_single_city(city_name, network_type, custom_filters, project_crs):
+    simplify = True # Removes nodes that are not intersections or dead ends. Creates new edge directly between nodes but retains original geometry
+    retain_all = True # Keep more than just largest connected component
+    truncate_by_edge = False # Keep whole edge even if it extends beyond the study area
+    clean_periphery = False # Cleaning the perifery allows us to retain intersection node that connect to links outside the study area, but not needed in this case
+    buffer_dist = None
+    which_result = None
+
+    result = {'data':None, 'note':'', 'area_name':city_name}
+
+    gdfTotal = gpd.GeoDataFrame()
+    msg = ""
+    for custom_filter in custom_filters:
+        try:
+            g = ox.graph_from_place(city_name, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, which_result=which_result, buffer_dist=buffer_dist, clean_periphery=clean_periphery, custom_filter=custom_filter)
+        except Exception as err:
+            msg += "Filter:{}\nError:{}".format(custom_filter, err)
+            continue
+        if g is None:
+            continue
+        elif len(g.edges())==0:
+            continue
+        else:
+            g = g.to_undirected()
+            df = nx.to_pandas_edgelist(g, source='u', target='v')
+            gdf = gpd.GeoDataFrame(df, geometry = 'geometry', crs = ox.settings.default_crs)
+            gdf = gdf.to_crs(project_crs)
+            gdfTotal = pd.concat([gdfTotal, gdf])
+
+    if gdfTotal.shape[0]==0:
+        msg += "\nOSM query returned no data"
+        result['note'] = msg
+    else:
+        # Convert graph to data frame
+        bb = gdfTotal.total_bounds
+        area = ( abs(bb[0]-bb[2]) * abs(bb[1]-bb[3]))
+        gdfTotal['bb_area'] = area
+        result['data'] = gdfTotal
+
+    return result
+
+
 def get_way_data_for_single_city(city_name, tags, project_crs):
 
     result = {'data':None, 'note':'', 'area_name':city_name}
@@ -190,7 +233,7 @@ def get_way_data_for_single_city(city_name, tags, project_crs):
     result['data'] = result['data'].loc['way']
 
     if result['data'] is None:
-        pass
+        result['note'] = 'OSM query returned None'
     elif result['data'].shape[0]==0:
         result['data'] = None
         result['note'] = 'Empty dataframe. No osm data found.'
@@ -223,6 +266,24 @@ def get_ways_for_multiple_cities(city_names, tags, project_crs, filename, output
 
     return city_ways
 
+def get_graph_data_for_multiple_cities(city_names, network_type, custom_filters, project_crs, filename, output_dir=None):
+
+    city_data = {}
+    for city_name in city_names:
+        result = {'data':None, 'note':'', 'area_name':city_name}
+        try:
+            result = get_graph_data_for_single_city(city_name, network_type, custom_filters, project_crs)
+        except Exception as e:
+            print(city_name, e)
+            result['note'] = str(e)
+        city_data[city_name] = result
+
+        if output_dir is not None:
+            # Save the data as we go
+            save_single_city_data(result, filename, output_dir)
+
+    return city_data
+
 def get_kerbs_for_multiple_cities(city_names, project_crs, output_dir = None):
     filename = 'kerbs.gpkg'
     return get_ways_for_multiple_cities(city_names, {"barrier":"kerb", "kerb":""},  project_crs, filename, output_dir = output_dir)
@@ -249,7 +310,8 @@ def save_single_city_data(city_result, filename, output_dir):
         
         city_result['data'].to_file(os.path.join(city_dir, filename), driver = "GPKG")
     else:
-        with open(os.path.join(city_dir, 'note.txt'), 'w') as f:
+        note_file_name = "note_{}.txt".format(os.path.splitext(filename)[0])
+        with open(os.path.join(city_dir, note_file_name), 'w') as f:
             note = city_result['note']
             try:
                 f.write(note)
