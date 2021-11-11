@@ -1,0 +1,4 @@
+Filter:["highway"="footway"]
+Error:There are no data elements in the response JSONFilter:["footway"="sidewalk"]
+Error:There are no data elements in the response JSON
+OSM query returned no data

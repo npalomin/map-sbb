@@ -1,0 +1,4 @@
+Filter:["barrier"="kerb"]
+Error:Nominatim could not geocode query "Nice-Cannes, France" to polygonal boundariesFilter:["kerb"]
+Error:Nominatim could not geocode query "Nice-Cannes, France" to polygonal boundaries
+OSM query returned no data

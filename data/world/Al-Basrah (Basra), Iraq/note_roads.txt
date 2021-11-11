@@ -1,0 +1,3 @@
+Filter:None
+Error:Nominatim could not geocode query "Al-Basrah (Basra), Iraq" to polygonal boundaries
+OSM query returned no data

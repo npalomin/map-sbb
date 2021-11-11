@@ -1,1 +1,0 @@
-Nominatim could not geocode query "Nice-Cannes, France" to polygonal boundaries

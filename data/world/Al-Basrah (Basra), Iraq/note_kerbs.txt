@@ -1,0 +1,4 @@
+Filter:["barrier"="kerb"]
+Error:Nominatim could not geocode query "Al-Basrah (Basra), Iraq" to polygonal boundariesFilter:["kerb"]
+Error:Nominatim could not geocode query "Al-Basrah (Basra), Iraq" to polygonal boundaries
+OSM query returned no data

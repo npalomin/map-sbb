@@ -1,0 +1,4 @@
+Filter:["barrier"="kerb"]
+Error:Nominatim could not geocode query "Najaf, Iraq" to polygonal boundariesFilter:["kerb"]
+Error:Nominatim could not geocode query "Najaf, Iraq" to polygonal boundaries
+OSM query returned no data
