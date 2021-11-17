@@ -344,14 +344,16 @@ def save_city_data(dict_city_data, filename, output_dir):
 
 def load_city_data(cities, filename, output_dir, project_crs):
     city_kerbs = {}
-    result = {'data':None, 'note':None}
     
     for city_name in cities:
-        gdfCityKerb = gpd.GeoDataFrame()
+        result = {'data':None, 'note':None}
+
+        gdf = gpd.GeoDataFrame()
         city_data_path = os.path.join(output_dir, city_name, filename)
         
         if os.path.exists(city_data_path)==False:
-            note_path = os.path.join(output_dir, city_name, 'note.txt')
+            note_file_name = "note_{}.txt".format(os.path.splitext(filename)[0])
+            note_path = os.path.join(output_dir, city_name, note_file_name)
             note = None
             with open(note_path, 'r') as f:
                 note = f.readline()
@@ -359,14 +361,20 @@ def load_city_data(cities, filename, output_dir, project_crs):
             result['note']=note
 
             if 'Empty dataframe' in note:
-                result['data'] = gdfCityKerb
+                result['data'] = gdf
 
             city_kerbs[city_name] = result
             continue
 
-        gdfCityKerb = gpd.read_file(city_data_path)
-        gdfCityKerb = gdfCityKerb.to_crs(project_crs)
-        result['data']=gdfCityKerb
+        try:
+            gdf = gpd.read_file(city_data_path)
+            gdf.dropna(subset=['geometry'], inplace=True)
+            gdf = gdf.to_crs(project_crs)
+        except Exception as err:
+            print(city_data_path)
+            raise(err)
+
+        result['data']=gdf
         city_kerbs[city_name] = result
 
     return city_kerbs
