@@ -3,12 +3,10 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import osmnx as ox
-import itertools
 from unidecode import unidecode
 
 import osm_utils as osmu
 
-from matplotlib import pyplot as plt
 
 #############################
 #
@@ -64,13 +62,3 @@ city_roads = osmu.get_graph_data_for_multiple_cities(cities, network_type, [None
 city_footways = osmu.get_graph_data_for_multiple_cities(cities, None, footways_filters, merc_crs, "footways.gpkg", output_dir=output_dir)
 city_kerbs = osmu.get_graph_data_for_multiple_cities(cities, None, kerb_filters, merc_crs, "kerbs.gpkg", output_dir=output_dir)
 
-
-#############################
-#
-#
-# Load data and do something with it
-#
-#
-############################
-
-#gdfFootways = osmu.load_city_data(cities, 'footways.gpkg', output_dir, project_crs)
