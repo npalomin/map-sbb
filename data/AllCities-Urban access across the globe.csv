@@ -1,0 +1,235 @@
+City	Abbre	Country	TotalPopulation	Auto	Transit	Walking	Cycling	Population	Ranking_Auto	Ranking_Transit	Ranking_Walking	Ranking_Cycling
+												
+New York	NYC	United States	20320876	1241973	213407	47338	370753	1	10	7	12	12
+												
+Beijing	PEK	China	17668140	3883735	175992	68091	749505	2	4	9	6	6
+												
+Shanghai	PVG	China	17377756	4690249	5223556	1162225	5325416	3	2	1	1	1
+												
+Los Angeles	LAX	United States	13353907	1282378	38647	14490	178007	4	9	34	36	19
+												
+Guangzhou	CAN	China	12663510	4903020	428610	146829	1177428	5	1	3	2	3
+												
+Sao Paulo	GRU	Brazil	11039463	-	36211	20394	174709	6	-	39	26	20
+												
+Shenzhen	SZX	China	10516429	4048766	286226	139854	996439	7	3	4	4	5
+												
+Chicago	CHI	United States	9533040	769483	53831	13965	138051	8	22	27	37	25
+												
+London	LCY	Europe	8173940	-	227080	50539	463959	9	-	6	10	11
+												
+Dallas	DAL	United States	7399662	998369	10699	5118	73646	10	14	74	77	57
+												
+Quebec	YQB	Canada	6976500	151692	24032	-	-	11	77	49	-	-
+												
+Houston	HOU	United States	6892427	829147	13639	6008	79485	12	16	66	68	51
+												
+Paris	CDG	Europe	6843111	-	591617	141135	1025302	13	-	2	3	4
+												
+Xian	XIY	China	6629000	3269548	250626	121247	1272791	14	5	5	5	2
+												
+Washington	DC	United States	6216589	623387	50551	12310	123007	15	27	29	39	30
+												
+Miami	MIA	United States	6158824	598727	14419	6872	86122	16	32	65	60	44
+												
+Rio de Janeiro	GIG	Brazil	6119114	-	16873	15010	99070	17	-	61	34	35
+												
+Philadelphia	PHI	United States	6096120	618294	38185	9929	91685	18	28	37	46	40
+												
+Atlanta	ATL	United States	5884736	475950	7152	3102	48958	19	48	87	101	80
+												
+Toronto	YYZ	Canada	5407200	254472	56794	-	-	20	69	25	-	-
+												
+Boston	BOS	United States	4836531	605308	44014	9988	140544	21	31	31	45	24
+												
+Sydney	SYD	Australia	4823991	342597	76617	20470	143253	22	59	16	25	23
+												
+Phoenix	PHX	United States	4737270	803505	10290	4725	72251	23	18	76	79	60
+												
+Nairobi	NBO	Africa	4735000	-	59342	22124	-	24	-	24	24	-
+												
+San Jose	SJC	United States	4727357	811889	19254	8476	130769	25	17	58	53	29
+												
+Riverside	UCR	United States	4580670	455652	4732	2613	40028	26	49	96	105	94
+												
+Melbourne	MEL	Australia	4485211	380754	61932	15192	135879	27	57	21	33	27
+												
+Detroit	DET	United States	4313002	787536	6349	3824	54598	28	19	92	90	75
+												
+Kunming	KMG	China	4172752	1770296	74815	65740	695971	29	6	17	7	7
+												
+St. Louis	STL	United States	3867046	581284	7268	3784	48217	30	37	85	91	81
+												
+Xiamen	XMN	China	3703521	1621125	81403	64777	511925	31	7	13	8	10
+												
+Douala	DLA	Africa	3663000	-	45386	45333	-	32	-	30	13	-
+												
+Minneapolis	MSP	United States	3600618	875049	18029	6063	78421	33	15	59	66	52
+												
+Montreal	YUL	Canada	3453700	213894	70498	-	-	34	71	18	-	-
+												
+San Francisco	SFO	United States	3337685	652817	81215	23428	168044	35	24	14	21	21
+												
+Tampa	TPA	United States	3091399	421134	6891	3705	48126	36	53	89	93	82
+												
+Denver	DEN	United States	2888227	786345	20665	8191	98129	37	20	56	54	36
+												
+Baltimore	BWI	United States	2808175	584586	17344	6850	71781	38	34	60	61	61
+												
+Salt Lake City	SLC	United States	2807338	637938	14721	6242	90009	39	26	64	64	42
+												
+Salvador	SAL	Brazil	2592926	-	-	9775	79494	40	-	-	47	50
+												
+Charlotte	CLT	United States	2525305	450125	7682	2937	43300	41	50	83	104	89
+												
+Brasilia	BSB	Brazil	2522601	-	-	4643	29599	42	-	-	81	100
+												
+Orlando	ORL	United States	2509831	526926	5596	3030	49906	43	40	93	102	77
+												
+San Diego	SAN	United States	2473974	642021	12109	6202	68083	44	25	68	65	64
+												
+Portland	PWM	United States	2453168	523784	20666	7137	85511	45	41	55	59	45
+												
+Fortaleza	FOR	Brazil	2405275	-	38465	11653	97250	46	-	36	42	37
+												
+Belo Horizonte	CNF	Brazil	2352062	-	60496	13818	73873	47	-	23	38	56
+												
+Pittsburgh	PIT	United States	2333367	319641	12317	4048	43204	48	63	67	88	90
+												
+Sacramento	SMF	United States	2324884	482910	9430	5687	57812	49	46	79	73	70
+												
+Brisbane	BNE	Australia	2270800	293131	42196	9267	81576	50	67	32	48	48
+												
+Vancouver	YVR	Canada	2223300	189074	61885	-	-	51	75	22	-	-
+												
+Las Vegas	LAS	United States	2204079	782690	8350	4721	94625	52	21	82	80	39
+												
+Cincinnati	CVG	United States	2179082	494927	7080	3290	41750	53	43	88	98	92
+												
+Kansas City	KS	United States	2128912	615321	6864	3742	48058	54	29	90	92	83
+												
+Austin	AUS	United States	2115827	481581	11444	5916	72355	55	47	69	69	59
+												
+Columbus	CMH	United States	2078725	605435	10857	4280	60860	56	30	73	84	67
+												
+Cleveland	CLE	United States	2058844	507302	8703	3961	49704	57	42	81	89	78
+												
+Indianapolis	IND	United States	2028614	556698	7491	3431	49420	58	38	84	97	79
+												
+Seattle	SEA	United States	1998463	547963	29003	11028	89512	59	39	45	44	43
+												
+Perth	PER	Australia	1943858	433116	36638	7735	69796	60	51	38	57	63
+												
+Nashville	BNA	United States	1903045	307872	5380	2989	37552	61	66	94	103	98
+												
+Bucharest	OTP	Europe	1830000	-	-	49914	595760	62	-		11	8
+												
+Warsaw	WAW	Europe	1783321	-	64153	24884	224453	63	-	20	19	17
+												
+Manaus	MAO	Brazil	1773375	-	-	6409	56528	64	-	-	63	73
+												
+Budapest	BUD	Europe	1752000	-	-	30980	277248	65	-		15	14
+												
+Curitiba	CWB	Brazil	1742355	-	35062	12109	101670	66	-	40	40	34
+												
+Virginia Beach	VB	United States	1725246	339490	4649	3165	39133	67	60	97	100	95
+												
+Vienna	VIE	Europe	1703000	-	204094	59755	552437	68	-	8	9	9
+												
+Providence	PVD	United States	1621122	351809	9751	5831	46220	69	58	77	71	85
+												
+Milwaukee	MKE	United States	1576236	596519	19383	7444	84722	70	33	57	58	47
+												
+Jacksonville	JAX	United States	1504980	316042	3765	2383	25254	71	64	99	106	103
+												
+Recife	REC	Brazil	1501976	-	22814	15212	117033	72	-	52	31	31
+												
+Auckalnd	AKL	New Zealand	1415550	210934	25761	8729	73950	73	72	47	51	55
+												
+Porto Alegre	POA	Brazil	1389410	-	69973	14660	102172	74	-	19	35	33
+												
+Oklahoma City	OKC	United States	1383737	398760	4936	3482	41976	75	54	95	96	91
+												
+Belem	BEL	Brazil	1357180	-	-	11047	79980	76	-	-	43	49
+												
+Raleigh	RDU	United States	1335079	489859	4371	4300	37690	77	44	98	83	97
+												
+Goiania	GYN	Brazil	1301592	-	-	8798	76650	78	-	-	50	54
+												
+Adelaide	ADL	Australia	1295714	234902	33095	6729	85267	79	70	42	62	46
+												
+Richmond	RIC	United States	1294204	392485	6719	3615	44048	80	55	91	94	88
+												
+Louisville	SDF	United States	1293953	423448	7263	3236	47502	81	52	86	99	84
+												
+New Orleans	MSY	United States	1275762	308564	10429	5274	57088	82	65	75	75	72
+												
+Calgary	YYC	Canada	1241300	207264	23298	-	-	83	73	51	-	-
+												
+Hartford	BDL	United States	1210259	487649	11300	4944	45444	84	45	70	78	87
+												
+San Antonio	SAT	United States	1203105	583812	9306	4087	60172	85	35	80	87	68
+												
+Guarulhos	GUA	Brazil	1202298	-	-	7875	62396	86	-	-	56	66
+												
+Edmonton	YEG	Canada	1156900	201568	21279	-	-	87	74	53	-	-
+												
+Birmingham	BHM	United States	1149807	268251	2713	1969	26215	88	68	100	107	102
+												
+Ottawa_Gatineau	YOW	Canada	1145100	151116	29631	-	-	89	78	44	-	-
+												
+Buffalo	BUF	United States	1136856	389028	11101	5167	56477	90	56	71	76	74
+												
+Campinas	VCP	Brazil	1065137	-	-	8661	60132	91	-	-	52	69
+												
+Sao Luis	SLZ	Brazil	981172	-	-	5757	38236	92	-	-	72	96
+												
+Wroclaw	WRO	Europe	971244	330210	55659	22613	136140	93	61	26	22	26
+												
+Sao Goncalo	QSD	Brazil	935758	-	-	4226	31886	94	-	-	85	99
+												
+Maceio	MCZ	Brazil	917872	-	-	7951	54188	95	-	-	55	76
+												
+Amsterdam	AMS	Europe	833624	1419003	141369	39996	346991	96	8	10	14	13
+												
+Duque de Caxias	DDC	Brazil	828198	-	-	5541	28747	97	-	-	74	101
+												
+Natal	NAT	Brazil	790017	-	-	8862	57158	98	-	-	49	71
+												
+Campo Grande	CGR	Brazil	779885	-	-	4635	41048	99	-	-	82	93
+												
+Krakow	KRK	Europe	767348	-	52733	17843	134432	100	-	28	28	28
+												
+Winnipeg	YWG	Canada	684600	144413	33259	-	-	101	80	41	-	-
+												
+Rotterdam	RTM	Europe	629606	1238582	83064	27761	243655	102	11	12	17	15
+												
+The Hague	EHGV	Europe	519988	1042759	99730	29710	231517	103	13	11	16	16
+												
+Wellington	WLG	New Zealand	471315	111423	42177	15833	78351	104	83	33	30	53
+												
+Gdansk	GDN	Europe	463754	-	26766	11708	90241	105	-	46	41	41
+												
+London	YXU	Canada	438200	112571	15061	-	-	106	82	63	-	-
+												
+Bratislava	BTS	Europe	424428	-	-	22257	73315	107	-		23	58
+												
+Canberra	CBR	Australia	396857	171210	24000	5837	45782	108	76	50	70	86
+												
+Halifax	YHZ	Canada	364700	120327	16511	-	-	109	81	62	-	-
+												
+Christchurch	CHC	New Zealand	341469	149783	25753	6016	71609	110	79	48	67	62
+												
+Utrecht	UTC	Europe	338967	1077662	77956	26877	215680	111	12	15	18	18
+												
+Eindhoven	EIN	Europe	224755	684701	32006	19845	167570	112	23	43	27	22
+												
+Hobart	HBA	Australia	222356	62479	10943	4142	21917	113	84	72	86	104
+												
+Tilburg	EHBK	Europe	212941	582446	21121	15197	96425	114	36	54	32	38
+												
+Groningen	GRQ	Europe	200952	324987	38645	23471	108158	115	62	35	20	32
+												
+Kielce	EPKA	Europe	196335	-	-	16741	63501	116	-	-	29	65
+												
+Darwin	DRW	Australia	136828	59853	9521	3486	19403	117	85	78	95	105

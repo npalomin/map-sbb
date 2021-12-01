@@ -16,6 +16,8 @@ library(ggplot2)
 library(ggthemes)
 library(patchwork)
 library(sf)
+#install.packages("sfnetworks")
+library(sfnetworks)
 ```
 
 ## Get OSM data
