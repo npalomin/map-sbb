@@ -1,0 +1,58 @@
+---
+title: "OSM footways_1"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("osmdata")
+library(osmdata)
+#install.packages('Rcpp')
+library(Rcpp)
+library(tmap)
+library(ggplot2)
+library(ggthemes)
+library(patchwork)
+library(sf)
+#install.packages("sfnetworks")
+library(sfnetworks)
+```
+
+## Get OSM data
+
+osmdata uses the overpass API to download  
+London
+
+```{r}
+# bbox= 51.2867601,-0.5103751,51.6918741,0.3340155
+lon_f <- opq(bbox = c(-0.5103751,51.2867601,0.3340155,51.6918741)) %>%
+  add_osm_feature(key = 'highway', value = 'footway') %>%
+  osmdata_sf()
+
+lon_h <- opq(bbox =  c(-0.5103751,51.2867601,0.3340155,51.6918741)) %>% 
+  add_osm_feature(key = 'highway') %>% 
+  osmdata_sf()
+```
+
+Barcelona  
+```{r}
+# 41.3170353,2.0524977,41.4679135,2.2283555
+barce_f <- opq(bbox = c(2.0524977,41.3170353,2.2283555,41.4679135)) %>%
+  add_osm_feature(key = 'highway', value = 'footway') %>%
+  osmdata_sf()
+
+barce_h <- opq(bbox = c(2.0524977,41.3170353,2.2283555,41.4679135)) %>%
+  add_osm_feature(key = 'highway') %>%
+  osmdata_sf()
+```
+
+## Generalise
+
+```{r}
+# osmextract
+```
+
+
+
