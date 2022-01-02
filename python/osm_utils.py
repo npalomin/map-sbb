@@ -205,7 +205,15 @@ def get_graph_data_for_single_city(city_name, network_type, custom_filters, proj
             continue
         else:
             g = g.to_undirected()
+            nodes = list(g.nodes(data=True))
+            
             df = nx.to_pandas_edgelist(g, source='u', target='v')
+            df['default_geometry'] = df.apply(lambda row: LineString(
+                                        [Point((g.nodes[row['u']]["x"], g.nodes[row['u']]["y"])), Point((g.nodes[row['v']]["x"], g.nodes[row['v']]["y"]))]
+                                            ), axis=1)
+            df.loc[ df['geometry'].isnull(), 'geometry'] = df.loc[df['geometry'].isnull(), 'default_geometry']
+            df.drop('default_geometry', axis=1, inplace=True)
+ 
             gdf = gpd.GeoDataFrame(df, geometry = 'geometry', crs = ox.settings.default_crs)
             gdf = gdf.to_crs(project_crs)
             gdfTotal = pd.concat([gdfTotal, gdf])
@@ -270,6 +278,7 @@ def get_graph_data_for_multiple_cities(city_names, network_type, custom_filters,
 
     city_data = {}
     for city_name in city_names:
+        print("\nGetting {} {}\n".format(city_name, filename))
         result = {'data':None, 'note':'', 'area_name':city_name}
         try:
             result = get_graph_data_for_single_city(city_name, network_type, custom_filters, project_crs)
@@ -355,11 +364,15 @@ def load_city_data(cities, filename, output_dir, project_crs):
             note_file_name = "note_{}.txt".format(os.path.splitext(filename)[0])
             note_path = os.path.join(output_dir, city_name, note_file_name)
             note = None
-            with open(note_path, 'r') as f:
-                note = f.readline()
-            print("{}: {}".format(city_name, note))
-            result['note']=note
 
+            if os.path.exists(note_file_name)==True:
+                with open(note_path, 'r') as f:
+                    note = f.readline()
+                print("{}: {}".format(city_name, note))
+            else:
+                note="note missing"
+            
+            result['note']=note
             if 'Empty dataframe' in note:
                 result['data'] = gdf
 

@@ -4,7 +4,6 @@ import os
 import numpy as np
 import pandas as pd
 import geopandas as gpd
-from unidecode import unidecode
 
 import osm_utils as osmu
 import importlib
@@ -21,7 +20,7 @@ from matplotlib import pyplot as plt
 #
 #############################
 merc_crs = {'init' :'epsg:3857'}
-output_dir = "..//data//world"
+output_dir = "..//data//urban_access_cities"
 
 
 ############################
@@ -32,20 +31,11 @@ output_dir = "..//data//world"
 #
 ############################
 
-countries = ['United Kingdom', 'France', 'Spain', 'Japan', 'Germany', 'China', 'United States of America', 'Columbia', 'Chile', 'Iraq', 'Egypt']
+dfCityPop = pd.read_csv("../data/AllCities-Urban access across the globe.csv", delimiter="\t")
+dfCityPop.dropna(axis=0, how='all', inplace=True)
 
-# Load world cities data, access from https://data.london.gov.uk/dataset/global-city-population-estimates
-dfCityPop = pd.read_csv("../data/world/global-city-population-estimates.csv", encoding = 'latin')
-
-# Filter to select just top n cities per country
-n = 2
-dfCityPop = dfCityPop.groupby("Country or area").apply(lambda df: df.sort_values(by='2020').iloc[:min(df.shape[0], n)])
-
-# Clean city names
-dfCityPop['city_name'] = dfCityPop['Urban Agglomeration'].map(lambda s: unidecode(s))
-
-dfCityPop['nm_cntry'] = dfCityPop['city_name'] + ", " + dfCityPop['Country or area']
-cities = dfCityPop.loc[ dfCityPop['Country or area'].isin(countries), 'nm_cntry'].values
+dfCityPop['nm_cntry'] = dfCityPop['City'] + ", " + dfCityPop['Country']
+cities = dfCityPop['nm_cntry'].values
 
 
 #############################
@@ -97,7 +87,7 @@ dfLengths = pd.DataFrame(city_lengths, columns = columns)
 dfLengths['footway_coverage'] = dfLengths.apply(lambda row: row['footway_length'] / (2*row['roads_length']), axis=1)
 dfLengths.sort_values(by = 'footway_coverage', ascending=False, inplace=True)
 
-dfLengths.to_csv(os.path.join(output_dir, 'footway_coverage.csv'), index=False)
+dfLengths.to_csv(os.path.join(output_dir, 'urban_access_cities_footway_coverage.csv'), index=False)
 
 # Make a figure
 def bar_chart(series, series_label, ylabel, title, img_path):
@@ -113,4 +103,4 @@ def bar_chart(series, series_label, ylabel, title, img_path):
     return f, ax
 
 dfLengths.set_index('city_name', inplace=True)
-f, ax = bar_chart(dfLengths['footway_coverage'], 'footway_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\footway_coverage.png")
+f, ax = bar_chart(dfLengths['footway_coverage'], 'footway_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footway_coverage.png")
