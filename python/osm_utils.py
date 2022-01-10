@@ -376,6 +376,17 @@ def save_single_city_data(city_result, filename, output_dir):
     if os.path.exists(city_dir)==False:
         os.mkdir(city_dir)
 
+
+    note_file_name = "note_{}.txt".format(os.path.splitext(filename)[0])
+    note_path = os.path.join(city_dir, note_file_name)
+    data_path = os.path.join(city_dir, filename)
+
+    # Delete existing data since it is now outdated
+    if os.path.exists(note_path):
+        os.remove(note_path)
+    if os.path.exists(data_path):
+        os.remove(data_path)
+
     if city_result['data'] is not None:
         # Remove columns that contain lists - these tend to be columns that contain information about the component nodes of the way
         for col in city_result['data'].columns:
@@ -383,10 +394,9 @@ def save_single_city_data(city_result, filename, output_dir):
                 city_result['data'].drop(col, axis=1, inplace=True)
                 print("'{}' column removed from {} data".format(col, city_name))
         
-        city_result['data'].to_file(os.path.join(city_dir, filename), driver = "GPKG")
+        city_result['data'].to_file(data_path, driver = "GPKG")
     else:
-        note_file_name = "note_{}.txt".format(os.path.splitext(filename)[0])
-        with open(os.path.join(city_dir, note_file_name), 'w') as f:
+        with open(note_path, 'w') as f:
             note = city_result['note']
             try:
                 f.write(note)
