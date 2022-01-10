@@ -245,23 +245,21 @@ def load_city_boundary(city_name, output_dir, index=None):
 
 # Getting data for multiple cities
 
-def get_graph_data_for_single_city(city_name, network_type, custom_filters, project_crs):
+def get_graph_data_for_single_city(city_polygon, network_type, custom_filters, project_crs):
     simplify = True # Removes nodes that are not intersections or dead ends. Creates new edge directly between nodes but retains original geometry
     retain_all = True # Keep more than just largest connected component
     truncate_by_edge = False # Keep whole edge even if it extends beyond the study area
     clean_periphery = False # Cleaning the perifery allows us to retain intersection node that connect to links outside the study area, but not needed in this case
-    buffer_dist = None
-    which_result = None
 
-    result = {'data':None, 'note':'', 'area_name':city_name}
+    result = {'data':None, 'note':''}
 
     gdfTotal = gpd.GeoDataFrame()
     msg = ""
     for custom_filter in custom_filters:
         try:
-            g = ox.graph_from_place(city_name, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, which_result=which_result, buffer_dist=buffer_dist, clean_periphery=clean_periphery, custom_filter=custom_filter)
+            g = ox.graph_from_polygon(city_polygon, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, clean_periphery=clean_periphery, custom_filter=custom_filter)
         except Exception as err:
-            msg += "Filter:{}\nError:{}".format(custom_filter, err)
+            msg += "Filter:{}\nError:{}\n".format(custom_filter, err)
             continue
         if g is None:
             continue
@@ -338,14 +336,18 @@ def get_ways_for_multiple_cities(city_names, tags, project_crs, filename, output
 
     return city_ways
 
-def get_graph_data_for_multiple_cities(city_names, network_type, custom_filters, project_crs, filename, output_dir=None):
+def get_graph_data_for_multiple_cities(city_names, boundary_indices, network_type, custom_filters, project_crs, filename, output_dir=None):
 
     city_data = {}
-    for city_name in city_names:
+    for i, city_name in enumerate(city_names):
         print("\nGetting {} {}\n".format(city_name, filename))
         result = {'data':None, 'note':'', 'area_name':city_name}
         try:
-            result = get_graph_data_for_single_city(city_name, network_type, custom_filters, project_crs)
+            gdf_city_boundary = load_city_boundary(city_name, output_dir, index = boundary_indices[i])
+            city_polygon = gdf_city_boundary["geometry"].unary_union
+            res = get_graph_data_for_single_city(city_polygon, network_type, custom_filters, project_crs)
+            result['data'] = res['data']
+            result['note'] = res['note']
         except Exception as e:
             print(city_name, e)
             result['note'] = str(e)
