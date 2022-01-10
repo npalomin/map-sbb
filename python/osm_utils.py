@@ -467,3 +467,30 @@ def load_city_data(cities, filename, output_dir, project_crs):
         city_kerbs[city_name] = result
 
     return city_kerbs
+
+def available_city_data(cities, output_dir, ext = None):
+
+    dfFiles = pd.DataFrame({'city':[], 'files':[]})
+    for city_name in cities:
+        result = {'city':[], 'files':[]}
+
+        city_data_dir = os.path.join(output_dir, city_name)
+        if os.path.isdir(city_data_dir)==False:
+            print(city_data_dir)
+            continue
+        city_data_files = os.listdir(city_data_dir)
+
+        if ext is not None:
+            city_data_files = [i for i in city_data_files if ".{}".format(ext) in i]
+
+        result['city'] = [city_name]*len(city_data_files)
+        result['files'] = city_data_files
+
+        df = pd.DataFrame(result)
+        dfFiles = pd.concat([dfFiles, df])
+
+    dfFiles['present']=1
+    dfFiles = dfFiles.set_index(['city','files']).unstack().reset_index()
+    dfFiles.columns = [i[1] if i[1]!="" else i[0] for i in dfFiles.columns]
+    
+    return dfFiles
