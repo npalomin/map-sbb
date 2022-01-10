@@ -34,9 +34,26 @@ output_dir = "..//data//urban_access_cities"
 dfCityPop = pd.read_csv("../data/AllCities-Urban access across the globe.csv", delimiter="\t")
 dfCityPop.dropna(axis=0, how='all', inplace=True)
 
-dfCityPop['nm_cntry'] = dfCityPop['City'] + ", " + dfCityPop['Country']
-cities = dfCityPop['nm_cntry'].values
+dfNameAlias = pd.read_csv(os.path.join(output_dir, "name_alias.csv"))
 
+dfCityPop['nm_cntry'] = dfCityPop['City'] + ", " + dfCityPop['Country']
+dfCityPop = pd.merge(dfCityPop, dfNameAlias, on="nm_cntry", how = 'left')
+dfCityPop['search_term'] = dfCityPop['nm_cntry_alias']
+dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'search_term'] = dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'nm_cntry']
+
+cities = dfCityPop['search_term'].values
+
+#############################
+#
+#
+# Find out what data is available
+#
+#
+#############################
+dfFiles = osmu.available_city_data(cities, output_dir, ext = None)
+dfFiles.to_csv(os.path.join(output_dir, 'file_downloaded.csv'), index=False)
+
+missing_roads_and_footways_data = dfFiles.loc[ (dfFiles['roads.gpkg'].isnull()) & (dfFiles['footways.gpkg'].isnull()), 'city'].values
 
 #############################
 #
