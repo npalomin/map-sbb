@@ -7,7 +7,8 @@ import requests
 import json
 import time
 import os
-from shapely.geometry import Polygon, Point, LineString
+import re
+from shapely.geometry import Polygon, Point, LineString, shape
 
 from matplotlib import pyplot as plt
 
@@ -177,6 +178,69 @@ def tag_bar_chart(series, series_label, ylabel, img_path, xtick_rotation = 30, x
     plt.xticks(rotation=xtick_rotation, ha='right', fontsize=xtick_fontsize)
     f.savefig(img_path)
     return f, ax
+
+def get_city_administrative_boundaries(cities, output_dir, limit=4):
+    total_res = {}
+    for i, city_name in enumerate(cities):
+        city_dir = os.path.join(output_dir, city_name)
+        if os.path.isdir(city_dir)==False:
+            os.mkdir(city_dir)
+
+        places_data = ox.downloader._osm_place_download(city_name, by_osmid=False, limit=limit, polygon_geojson=1)
+
+        # Some place names return multiple geometries. Want those that are administrative boundaries
+        for j, place_data in enumerate(places_data):
+            if (place_data['class']=='boundary') & (place_data['type']=='administrative'):
+                # This is an administrative boundary and therefore could be used for defining the city
+                geom = shape(place_data['geojson'])
+                del place_data['geojson']
+                place_data['boundingbox'] = ",".join(place_data['boundingbox'])
+                try:
+                    if geom.type == "MultiPolygon":
+                        geom = list(geom)
+                        place_data = [place_data]*len(geom)
+                    else:
+                        geom = [geom]
+                        place_data = [place_data]
+
+                    df = pd.DataFrame(place_data)
+                    df['geometry'] = geom
+                except Exception as err:
+                    print("\n{}, {}".format(city_name, j))
+                    print(place_data)
+                    print(err)
+                    continue
+
+                # Save this boundary for later use
+                gdf = gpd.GeoDataFrame(df, geometry = 'geometry', crs = {'init' :'epsg:4326'})
+                gdf.to_file(os.path.join(city_dir, "boundary{}.gpkg".format(j)), driver='GPKG')
+
+    return None
+
+def load_city_boundary(city_name, output_dir, index=None):
+
+    city_dir = os.path.join(output_dir, city_name)
+
+    boundary_files = [i for i in os.listdir(city_dir) if 'boundary' in i]
+    boundary_files.sort()
+
+    # Select bounary file with lowest index or with index that matches input
+    boundary_file = None
+    if (index is None) | (pd.isna(index)):
+        boundary_file = boundary_files[0]
+    else:
+        for bf in boundary_files:
+            i = int(os.path.splitext(bf)[0][-1])
+            if i == index:
+                boundary_file = bf
+                break
+    gdf_boundary = gpd.read_file(os.path.join(city_dir, boundary_file))
+    assert gdf_boundary.crs is not None
+
+    # OSM API accepts epgs:4326 crs only
+    gdf_boundary = gdf_boundary.to_crs({'init' :'epsg:4326'})
+
+    return gdf_boundary
 
 
 # Getting data for multiple cities
