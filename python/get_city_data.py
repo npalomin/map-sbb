@@ -63,9 +63,16 @@ osmu.get_city_administrative_boundaries(cities, output_dir, limit=4)
 #
 #############################
 network_type = 'drive'
+walking_type = 'walk'
 footways_filters =  ['["highway"="footway"]','["footway"="sidewalk"]']
 kerb_filters = ['["barrier"="kerb"]','["kerb"]']
+sidewalk_filters = ['["sidewalk"="both|left|right"]']
+no_sidewalk_filters = ['["sidewalk"="no"]']
 
 city_roads = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, network_type, [None], merc_crs, "roads.gpkg", output_dir=output_dir)
 city_footways = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, footways_filters, merc_crs, "footways.gpkg", output_dir=output_dir)
 city_kerbs = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, kerb_filters, merc_crs, "kerbs.gpkg", output_dir=output_dir)
+
+city_walking_network = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, walking_type, [None], merc_crs, "walk_network.gpkg", output_dir=output_dir)
+city_sidewalks = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, sidewalk_filters, merc_crs, "sidewalks.gpkg", output_dir=output_dir)
+city_no_sidewalk = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, no_sidewalk_filters, merc_crs, "no_sidewalks.gpkg", output_dir=output_dir)
