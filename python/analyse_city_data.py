@@ -63,9 +63,18 @@ missing_roads_and_footways_data = dfFiles.loc[ (dfFiles['roads.gpkg'].isnull()) 
 #
 ############################
 
-city_footways = osmu.load_city_data(cities, 'footways.gpkg', output_dir, merc_crs)
-city_roads = osmu.load_city_data(cities, 'roads.gpkg', output_dir, merc_crs)
+#dataset_names = ['roads','walk_network','footways','sidewalks','no_sidewalks']
+dataset_names = ['roads','footways']
 
+datasets = {}
+for dataset_name in dataset_names:
+	datasets[dataset_name] = osmu.load_city_data(cities, '{}.gpkg'.format(dataset_name), output_dir, merc_crs)
+
+'''
+city_footways = osmu.load_city_data(cities, 'footways.gpkg', output_dir, merc_crs)
+city_sidewalks = osmu.load_city_data(cities, 'sidewalks.gpkg', output_dir, merc_crs)
+city_no_sidewalks = osmu.load_city_data(cities, 'no_sidewalks.gpkg', output_dir, merc_crs)
+'''
 
 ###########################
 #
@@ -76,35 +85,43 @@ city_roads = osmu.load_city_data(cities, 'roads.gpkg', output_dir, merc_crs)
 ###########################
 
 # Initialise data frame
-columns = ['city_name', 'footway_length', 'roads_length']
-city_lengths = []
+dfTotal = pd.DataFrame()
 
 # Loop through cities
-for city_name in cities:
-	footways_result = city_footways[city_name]
-	roads_result = city_roads[city_name]
+for dataset_name in dataset_names:
+	dataset = datasets[dataset_name]
 
-	if (footways_result['data'] is None) | (roads_result['data'] is None):
-		continue
+	city_data = {}
+	for city_name in cities:
+		result = dataset[city_name]
 
-	gdfFootways = footways_result['data']
-	gdfRoads = roads_result['data']
+		if (result['data'] is None):
+			continue
 
-	# Get total lengths of each
-	footway_length = gdfFootways['geometry'].length.sum()
-	roads_length = gdfRoads['geometry'].length.sum()
+		gdf = result['data']
 
-	# Add to dataframe
-	city_lengths.append([city_name, footway_length, roads_length])
+		# Get total lengths of geometries
+		length = gdf['geometry'].length.sum()
 
+		# Add to dictionary
+		city_data[city_name] = length
 
-dfLengths = pd.DataFrame(city_lengths, columns = columns)
+	# Make dataframe of city values for this dataset
+	metric_name = dataset_name+"_length"
+	df = pd.DataFrame(city_data, index = [metric_name])
 
+	# Combine with total dataframe
+	dfTotal = pd.concat([dfTotal, df])
 
-dfLengths['footway_coverage'] = dfLengths.apply(lambda row: row['footway_length'] / (2*row['roads_length']), axis=1)
-dfLengths.sort_values(by = 'footway_coverage', ascending=False, inplace=True)
+# Reformat the data
+dfTotal = dfTotal.T
+dfTotal.index.name = 'city_name'
+dfTotal.reset_index(inplace=True)
 
-dfLengths.to_csv(os.path.join(output_dir, 'urban_access_cities_footway_coverage.csv'), index=False)
+dfTotal['footways_coverage'] = dfTotal.apply(lambda row: row['footways_length'] / (2*row['roads_length']), axis=1)
+dfTotal.sort_values(by = 'footways_coverage', ascending=False, inplace=True)
+
+dfTotal.to_csv(os.path.join(output_dir, 'urban_access_cities_footways_coverage_new.csv'), index=False)
 
 # Make a figure
 def bar_chart(series, series_label, ylabel, title, img_path):
@@ -119,5 +136,5 @@ def bar_chart(series, series_label, ylabel, title, img_path):
     f.savefig(img_path)
     return f, ax
 
-dfLengths.set_index('city_name', inplace=True)
-f, ax = bar_chart(dfLengths['footway_coverage'], 'footway_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footway_coverage.png")
+dfTotal.set_index('city_name', inplace=True)
+f, ax = bar_chart(dfTotal['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footways_coverage_new.png")
