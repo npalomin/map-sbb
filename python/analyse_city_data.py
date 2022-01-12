@@ -205,5 +205,6 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 	return f, ax
 
 data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
-f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', 'test.png', search_term_to_group, figsize = (10,10), pt_size=20)
+img_path = "..\\images\\coverage_distributions.png"
+f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
 
