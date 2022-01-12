@@ -391,8 +391,7 @@ def save_single_city_data(city_result, filename, output_dir):
         # Remove columns that contain lists - these tend to be columns that contain information about the component nodes of the way
         for col in city_result['data'].columns:
             if city_result['data'][col].map(lambda x: isinstance(x, (list, tuple))).any():
-                city_result['data'].drop(col, axis=1, inplace=True)
-                print("'{}' column removed from {} data".format(col, city_name))
+                city_result['data'].loc[ city_result['data'][col].map(lambda x: isinstance(x, (list, tuple))), col ] = city_result['data'].loc[ city_result['data'][col].map(lambda x: isinstance(x, (list, tuple))), col ].map(lambda x: ":".join(str(i) for i in x))
         
         city_result['data'].to_file(data_path, driver = "GPKG")
     else:
