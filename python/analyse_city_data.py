@@ -89,12 +89,16 @@ for dataset_name in dataset_names:
 		result = dataset[city_name]
 
 		if (result['data'] is None):
-			continue
+			note = result['note']
+			if "There are no data elements in the response JSON" in note:
+				length=0
+			else:
+				length = None
+		else:
+			gdf = result['data']
 
-		gdf = result['data']
-
-		# Get total lengths of geometries
-		length = gdf['geometry'].length.sum()
+			# Get total lengths of geometries
+			length = gdf['geometry'].length.sum()
 
 		# Add to dictionary
 		city_data[city_name] = length
@@ -136,4 +140,3 @@ def bar_chart(series, series_label, ylabel, title, img_path):
 
 dfTotal.set_index('city_name', inplace=True)
 f, ax = bar_chart(dfTotal['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footways_coverage_walking_network.png")
-
