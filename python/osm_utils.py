@@ -440,9 +440,9 @@ def load_city_data(cities, filename, output_dir, project_crs):
             note_path = os.path.join(output_dir, city_name, note_file_name)
             note = None
 
-            if os.path.exists(note_file_name)==True:
+            if os.path.exists(note_path)==True:
                 with open(note_path, 'r') as f:
-                    note = f.readline()
+                    note = "\n".join(f.readlines())
                 print("{}: {}".format(city_name, note))
             else:
                 note="note missing"
