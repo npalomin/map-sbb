@@ -66,7 +66,7 @@ network_type = 'drive'
 walking_type = 'walk'
 footways_filters =  ['["highway"="footway"]','["footway"="sidewalk"]']
 kerb_filters = ['["barrier"="kerb"]','["kerb"]']
-sidewalk_filters = ['["sidewalk"="both|left|right"]']
+sidewalk_filters = ['["sidewalk"~"both|left|right"]']
 no_sidewalk_filters = ['["sidewalk"="no"]']
 
 city_roads = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, network_type, [None], merc_crs, "roads.gpkg", output_dir=output_dir)
