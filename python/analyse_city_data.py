@@ -43,6 +43,21 @@ dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'search_term'] = dfCityPop.
 
 cities = dfCityPop['search_term'].values
 
+# Group certain countries together
+cntry_groups = {'United States': 'US+Canada',
+				'China': 'China',
+				'Brazil': 'Brazil',
+				'Europe': 'Europe',
+				'Canada': 'US+Canada',
+				'Australia': 'Aus+NZ',
+				'Africa': 'Africa',
+				'New Zealand': 'Aus+NZ'}
+
+dfCityPop['Group'] = dfCityPop['Country'].replace(cntry_groups)
+
+# Get lookup from new city search terms to country group
+search_term_to_group = dfCityPop.set_index('search_term')['Group'].to_dict()
+
 #############################
 #
 #
@@ -125,6 +140,17 @@ dfTotal.sort_values(by = 'footways_coverage', ascending=False, inplace=True)
 
 dfTotal.to_csv(os.path.join(output_dir, 'urban_access_cities_footways_coverage_new.csv'), index=False)
 
+
+###############################
+#
+#
+# Produce figures
+#
+#
+###############################
+
+dfTotal = pd.read_csv(os.path.join(output_dir, 'urban_access_cities_footways_coverage_new.csv'))
+
 # Make a figure
 def bar_chart(series, series_label, ylabel, title, img_path):
     f, ax = plt.subplots(figsize = (10,10))
@@ -140,3 +166,44 @@ def bar_chart(series, series_label, ylabel, title, img_path):
 
 dfTotal.set_index('city_name', inplace=True)
 f, ax = bar_chart(dfTotal['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footways_coverage_walking_network.png")
+
+
+def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,10), labelsize = 14, titlesize = 20, pt_size=20):
+	f, ax = plt.subplots(figsize = (10,10))
+
+	df.dropna(subset = data_cols, inplace=True)
+
+	data = df[data_cols].values
+	pos = range(len(data_cols))
+
+	ax.violinplot(data, pos, points=20, widths=0.9, showmeans=False, showextrema=True, showmedians=False, bw_method=0.5)
+
+	# create second axis for scatter plot
+	ax2 = ax.twinx()
+
+	# Now reformat data for scatter plot
+	df_scatter = df.set_index('city_name')[data_cols].stack().reset_index()
+	df_scatter['x'] = df_scatter['level_1'].replace({v:i for i,v in enumerate(data_cols)})
+	df_scatter.rename(columns = {0:'y'}, inplace=True)
+	df_scatter['group'] = df_scatter['city_name'].replace(city_group_dict)
+
+	colors = ['red','green','blue','yellow','orange', 'grey']
+	x_displacements = np.linspace(-0.2, 0.2, len(colors))
+	for g, c, xi in zip(df_scatter['group'].unique(), colors, x_displacements):
+		dfgroup = df_scatter.loc[ df_scatter['group']==g]
+		ax2.scatter(dfgroup['x']+xi, dfgroup['y'], color = c, alpha = 0.5, label = g, s = pt_size)
+	
+	ax2.legend()
+	ax2.set_axis_off()
+
+	ax.set_xticks(pos)
+	ax.set_xticklabels(i.replace("_"," ").title() for i in data_cols)
+	ax.tick_params(labelsize = labelsize)
+	ax.set_title(title, fontsize=20)
+
+	f.savefig(img_path)
+	return f, ax
+
+data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
+f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', 'test.png', search_term_to_group, figsize = (10,10), pt_size=20)
+
