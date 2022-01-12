@@ -63,18 +63,11 @@ missing_roads_and_footways_data = dfFiles.loc[ (dfFiles['roads.gpkg'].isnull()) 
 #
 ############################
 
-#dataset_names = ['roads','walk_network','footways','sidewalks','no_sidewalks']
-dataset_names = ['roads','footways']
+dataset_names = ['roads','walk_network','footways','sidewalks','no_sidewalks']
 
 datasets = {}
 for dataset_name in dataset_names:
 	datasets[dataset_name] = osmu.load_city_data(cities, '{}.gpkg'.format(dataset_name), output_dir, merc_crs)
-
-'''
-city_footways = osmu.load_city_data(cities, 'footways.gpkg', output_dir, merc_crs)
-city_sidewalks = osmu.load_city_data(cities, 'sidewalks.gpkg', output_dir, merc_crs)
-city_no_sidewalks = osmu.load_city_data(cities, 'no_sidewalks.gpkg', output_dir, merc_crs)
-'''
 
 ###########################
 #
@@ -118,7 +111,12 @@ dfTotal = dfTotal.T
 dfTotal.index.name = 'city_name'
 dfTotal.reset_index(inplace=True)
 
-dfTotal['footways_coverage'] = dfTotal.apply(lambda row: row['footways_length'] / (2*row['roads_length']), axis=1)
+dfTotal['footways_coverage'] = dfTotal.apply(lambda row: row['footways_length'] / (2*row['walk_network_length']), axis=1)
+dfTotal['sidewalks_coverage'] = dfTotal.apply(lambda row: row['sidewalks_length'] / (2*row['walk_network_length']), axis=1)
+dfTotal['no_sidewalks_coverage'] = dfTotal.apply(lambda row: row['no_sidewalks_length'] / (2*row['walk_network_length']), axis=1)
+
+dfTotal['walk_network_coverage'] = dfTotal['walk_network_length'] / dfTotal['roads_length']
+
 dfTotal.sort_values(by = 'footways_coverage', ascending=False, inplace=True)
 
 dfTotal.to_csv(os.path.join(output_dir, 'urban_access_cities_footways_coverage_new.csv'), index=False)
@@ -137,4 +135,5 @@ def bar_chart(series, series_label, ylabel, title, img_path):
     return f, ax
 
 dfTotal.set_index('city_name', inplace=True)
-f, ax = bar_chart(dfTotal['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footways_coverage_new.png")
+f, ax = bar_chart(dfTotal['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footways_coverage_walking_network.png")
+
