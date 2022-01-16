@@ -133,6 +133,7 @@ dfTotal.reset_index(inplace=True)
 dfTotal['footways_coverage'] = dfTotal.apply(lambda row: row['footways_length'] / (2*row['walk_network_length']), axis=1)
 dfTotal['sidewalks_coverage'] = dfTotal.apply(lambda row: row['sidewalks_length'] / (2*row['walk_network_length']), axis=1)
 dfTotal['no_sidewalks_coverage'] = dfTotal.apply(lambda row: row['no_sidewalks_length'] / (2*row['walk_network_length']), axis=1)
+dfTotal['all_sidewalks_coverage'] = dfTotal.apply(lambda row: (row['sidewalks_length'] + row['no_sidewalks_length']) / (2*row['walk_network_length']), axis=1)
 
 dfTotal['walk_network_coverage'] = dfTotal['walk_network_length'] / dfTotal['roads_length']
 
@@ -207,4 +208,10 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
 img_path = "..\\images\\coverage_distributions.png"
 f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+
+df = dfTotal.reindex(columns = ['footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalk_coverage'})
+data_cols = ['footways_coverage', 'sidewalks_coverage']
+img_path = "..\\images\\coverage_distributions_all_sidewalk_combined.png"
+f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+
 
