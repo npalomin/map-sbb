@@ -1,0 +1,33 @@
+---
+title: "Explore urban_access"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("osmdata")
+library(osmdata)
+#install.packages('Rcpp')
+library(Rcpp)
+library(tmap)
+library(ggplot2)
+library(ggthemes)
+library(patchwork)
+library(sf)
+#install.packages("sfnetworks")
+library(sfnetworks)
+```
+
+## Get data
+
+```{r}
+library(readr)
+#uacc <- read_csv("~/data/urban_access_cities/urban_access_cities_footways_coverage_new.csv")
+```
+
+```{r}
+
+```
+
