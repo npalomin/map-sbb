@@ -20,6 +20,9 @@ importlib.reload(osmu)
 merc_crs = {'init' :'epsg:3857'}
 output_dir = "..//data//urban_access_cities"
 
+# Change some config settings
+ox.config(timeout = 400, useful_tags_way = ox.settings.useful_tags_way+['sidewalk'])
+
 ############################
 #
 #
