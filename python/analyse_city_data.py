@@ -215,3 +215,24 @@ img_path = "..\\images\\coverage_distributions_all_sidewalk_combined.png"
 f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
 
 
+############################
+#
+#
+# Calculate correlations between coverage and accessibility
+#
+#
+############################
+
+# Convert cols to numeric
+for c in ['Auto', 'Transit','Walking', 'Cycling']:
+	dfCityPop[c] = dfCityPop[c].replace({'-':np.nan}).astype(float)
+
+
+# Merge in the geometry lengths and coverage values
+dfCityPop = pd.merge(dfCityPop, dfTotal, left_on = 'search_term', right_on = 'city_name', indicator=True)
+assert dfCityPop.loc[ dfCityPop['_merge'] !='both'].shape[0] == 0
+
+# Turns out footway coverage is negatively correlated with Pop and all accessibility measures
+FootwayCoor = dfCityPop.loc[:, ['footways_coverage','TotalPopulation', 'Auto', 'Transit','Walking', 'Cycling']].corr()
+
+# Need to try controlling for population
