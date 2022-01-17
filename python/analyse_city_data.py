@@ -241,6 +241,8 @@ import seaborn as sns
 for c in ['Auto', 'Transit','Walking', 'Cycling']:
 	dfCityPop[c] = dfCityPop[c].replace({'-':np.nan}).astype(float)
 	dfCityPop[c+'_pp'] = dfCityPop[c] / dfCityPop['TotalPopulation']
+	dfCityPop[c+'_pp_log'] = np.log(dfCityPop[c]) / np.log(dfCityPop['TotalPopulation'])
+
 
 
 # Merge in the geometry lengths and coverage values
@@ -248,18 +250,20 @@ dfCityPop = pd.merge(dfCityPop, dfTotal, left_on = 'search_term', right_on = 'ci
 assert dfCityPop.loc[ dfCityPop['_merge'] !='both'].shape[0] == 0
 
 # Turns out footway coverage is negatively correlated with Pop and all accessibility measures
-corr_cols = ['footways_coverage', 'Auto_pp', 'Transit_pp','Walking_pp', 'Cycling_pp']
+corr_cols = ['footways_coverage', 'Auto_pp', 'Transit_pp','Walking_pp', 'Cycling_pp', 'Auto_pp_log', 'Transit_pp_log','Walking_pp_log', 'Cycling_pp_log']
 FootwayCoor = dfCityPop.loc[:, corr_cols].corr(method='pearson').values
-FootwayCoor = np.round_(FootwayCoor2, decimals=3)
+FootwayCoor = np.round_(FootwayCoor, decimals=3)
 
 f, ax = plt.subplots(figsize=(10,10))
-ax.imshow(FootwayCoor2)
-ax.set_xticks(range(len(corr_cols)), labels=corr_cols)
-ax.set_yticks(range(len(corr_cols)), labels=corr_cols)
+ax.imshow(FootwayCoor)
+ax.set_xticks(range(len(corr_cols)))
+ax.set_yticks(range(len(corr_cols)))
+ax.set_xticklabels(corr_cols)
+ax.set_yticklabels(corr_cols)
 plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 for i in range(len(corr_cols)):
     for j in range(len(corr_cols)):
-        text = ax.text(j, i, FootwayCoor2[i, j],
+        text = ax.text(j, i, FootwayCoor[i, j],
                        ha="center", va="center", color="w")
 f.savefig("..\\images\\accessibility_correlation.png")
 
