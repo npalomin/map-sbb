@@ -165,8 +165,8 @@ def bar_chart(series, series_label, ylabel, title, img_path):
     f.savefig(img_path)
     return f, ax
 
-dfTotal.set_index('city_name', inplace=True)
-f, ax = bar_chart(dfTotal['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footways_coverage_walking_network.png")
+df = dfTotal.set_index('city_name')
+f, ax = bar_chart(df['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footways_coverage_walking_network.png")
 
 
 def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,10), labelsize = 14, titlesize = 20, pt_size=20):
@@ -209,10 +209,10 @@ data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
 img_path = "..\\images\\coverage_distributions.png"
 f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
 
-df = dfTotal.reindex(columns = ['footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalk_coverage'})
+df = dfTotal.reindex(columns = ['city_name', 'footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalks_coverage'})
 data_cols = ['footways_coverage', 'sidewalks_coverage']
 img_path = "..\\images\\coverage_distributions_all_sidewalk_combined.png"
-f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+f, ax = violin_plot(df, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
 
 
 ############################
