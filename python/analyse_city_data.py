@@ -232,10 +232,15 @@ f, ax = violin_plot(df, data_cols, 'Coverage Distributions', img_path, search_te
 #
 #
 ############################
+import scipy
+import statsmodels.api as sm
+import itertools
+import seaborn as sns
 
 # Convert cols to numeric
 for c in ['Auto', 'Transit','Walking', 'Cycling']:
 	dfCityPop[c] = dfCityPop[c].replace({'-':np.nan}).astype(float)
+	dfCityPop[c+'_pp'] = dfCityPop[c] / dfCityPop['TotalPopulation']
 
 
 # Merge in the geometry lengths and coverage values
@@ -243,6 +248,68 @@ dfCityPop = pd.merge(dfCityPop, dfTotal, left_on = 'search_term', right_on = 'ci
 assert dfCityPop.loc[ dfCityPop['_merge'] !='both'].shape[0] == 0
 
 # Turns out footway coverage is negatively correlated with Pop and all accessibility measures
-FootwayCoor = dfCityPop.loc[:, ['footways_coverage','TotalPopulation', 'Auto', 'Transit','Walking', 'Cycling']].corr()
+corr_cols = ['footways_coverage', 'Auto_pp', 'Transit_pp','Walking_pp', 'Cycling_pp']
+FootwayCoor = dfCityPop.loc[:, corr_cols].corr(method='pearson').values
+FootwayCoor = np.round_(FootwayCoor2, decimals=3)
+
+f, ax = plt.subplots(figsize=(10,10))
+ax.imshow(FootwayCoor2)
+ax.set_xticks(range(len(corr_cols)), labels=corr_cols)
+ax.set_yticks(range(len(corr_cols)), labels=corr_cols)
+plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+for i in range(len(corr_cols)):
+    for j in range(len(corr_cols)):
+        text = ax.text(j, i, FootwayCoor2[i, j],
+                       ha="center", va="center", color="w")
+f.savefig("..\\images\\accessibility_correlation.png")
 
 # Need to try controlling for population
+model = sm.formula.ols("footways_coverage ~ Walking_pp", dfCityPop).fit()
+print(model.summary())
+
+model = sm.formula.ols("footways_coverage ~ Auto_pp", dfCityPop).fit()
+print(model.summary())
+
+model = sm.formula.ols("footways_coverage ~ Cycling", dfCityPop).fit()
+print(model.summary())
+
+###########################
+#
+#
+# Significance tests for differences between countries/regions
+#
+#
+###########################
+
+# Use Mann Whitney U test (rank sum test) since samples are small and not necessarily normally distributed.
+# Compare Euproe to other groups on coverage indicators
+
+dfTotal['footways_coverage_rank'] = dfTotal['footways_coverage'].rank()
+dfTotal['sidewalks_coverage_rank'] = dfTotal['sidewalks_coverage'].rank()
+
+data = {'Indicator':[], 'GroupX':[], 'GroupY':[], 'MedianX':[], 'MedianY':[], 'p':[]}
+indicators = ['footways_coverage','sidewalks_coverage']
+
+for i in indicators:
+	df = dfCityPop.dropna(subset=[i])
+	for cx, cy in itertools.combinations(df['Group'].unique(), 2):
+		x = df.loc[ df['Group']==cx, i]
+		y = df.loc[ df['Group']==cy, i]
+
+		mx = np.median(x)
+		my = np.median(y)
+
+		U1, p = scipy.stats.mannwhitneyu(x, y, method="asymptotic", alternative = 'two-sided')
+
+		data['Indicator'].append(i)
+		data['GroupX'].append(cx)
+		data['GroupY'].append(cy)
+		data['MedianX'].append(mx)
+		data['MedianY'].append(my)
+		data['p'].append(p)
+
+dfMW = pd.DataFrame(data)
+dfMW.to_csv(os.path.join(output_dir, 'man-whitney-results.csv'), index=False)
+
+
+
