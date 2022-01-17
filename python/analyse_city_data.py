@@ -113,7 +113,17 @@ for dataset_name in dataset_names:
 			gdf = result['data']
 
 			# Get total lengths of geometries
-			length = gdf['geometry'].length.sum()
+			if dataset_name=='sidewalks':
+				# Need to account for whether sidewalk tage applies to both or one side of the road
+				length = gdf.loc[ gdf['sidewalk']=='both', 'geometry'].length.sum() * 2
+				length += gdf.loc[ gdf['sidewalk']!='both', 'geometry'].length.sum()
+			elif dataset_name=='no_sidewalks':
+				length = gdf['geometry'].length.sum() * 2
+			else:
+				length = gdf['geometry'].length.sum()
+
+			result = None
+			gdf=None
 
 		# Add to dictionary
 		city_data[city_name] = length
