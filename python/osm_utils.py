@@ -7,7 +7,8 @@ import requests
 import json
 import time
 import os
-from shapely.geometry import Polygon, Point, LineString
+import re
+from shapely.geometry import Polygon, Point, LineString, shape
 
 from matplotlib import pyplot as plt
 
@@ -178,26 +179,87 @@ def tag_bar_chart(series, series_label, ylabel, img_path, xtick_rotation = 30, x
     f.savefig(img_path)
     return f, ax
 
+def get_city_administrative_boundaries(cities, output_dir, limit=4):
+    total_res = {}
+    for i, city_name in enumerate(cities):
+        city_dir = os.path.join(output_dir, city_name)
+        if os.path.isdir(city_dir)==False:
+            os.mkdir(city_dir)
+
+        places_data = ox.downloader._osm_place_download(city_name, by_osmid=False, limit=limit, polygon_geojson=1)
+
+        # Some place names return multiple geometries. Want those that are administrative boundaries
+        for j, place_data in enumerate(places_data):
+            if (place_data['class']=='boundary') & (place_data['type']=='administrative'):
+                # This is an administrative boundary and therefore could be used for defining the city
+                geom = shape(place_data['geojson'])
+                del place_data['geojson']
+                place_data['boundingbox'] = ",".join(place_data['boundingbox'])
+                try:
+                    if geom.type == "MultiPolygon":
+                        geom = list(geom)
+                        place_data = [place_data]*len(geom)
+                    else:
+                        geom = [geom]
+                        place_data = [place_data]
+
+                    df = pd.DataFrame(place_data)
+                    df['geometry'] = geom
+                except Exception as err:
+                    print("\n{}, {}".format(city_name, j))
+                    print(place_data)
+                    print(err)
+                    continue
+
+                # Save this boundary for later use
+                gdf = gpd.GeoDataFrame(df, geometry = 'geometry', crs = {'init' :'epsg:4326'})
+                gdf.to_file(os.path.join(city_dir, "boundary{}.gpkg".format(j)), driver='GPKG')
+
+    return None
+
+def load_city_boundary(city_name, output_dir, index=None):
+
+    city_dir = os.path.join(output_dir, city_name)
+
+    boundary_files = [i for i in os.listdir(city_dir) if 'boundary' in i]
+    boundary_files.sort()
+
+    # Select bounary file with lowest index or with index that matches input
+    boundary_file = None
+    if (index is None) | (pd.isna(index)):
+        boundary_file = boundary_files[0]
+    else:
+        for bf in boundary_files:
+            i = int(os.path.splitext(bf)[0][-1])
+            if i == index:
+                boundary_file = bf
+                break
+    gdf_boundary = gpd.read_file(os.path.join(city_dir, boundary_file))
+    assert gdf_boundary.crs is not None
+
+    # OSM API accepts epgs:4326 crs only
+    gdf_boundary = gdf_boundary.to_crs({'init' :'epsg:4326'})
+
+    return gdf_boundary
+
 
 # Getting data for multiple cities
 
-def get_graph_data_for_single_city(city_name, network_type, custom_filters, project_crs):
+def get_graph_data_for_single_city(city_polygon, network_type, custom_filters, project_crs):
     simplify = True # Removes nodes that are not intersections or dead ends. Creates new edge directly between nodes but retains original geometry
     retain_all = True # Keep more than just largest connected component
     truncate_by_edge = False # Keep whole edge even if it extends beyond the study area
     clean_periphery = False # Cleaning the perifery allows us to retain intersection node that connect to links outside the study area, but not needed in this case
-    buffer_dist = None
-    which_result = None
 
-    result = {'data':None, 'note':'', 'area_name':city_name}
+    result = {'data':None, 'note':''}
 
     gdfTotal = gpd.GeoDataFrame()
     msg = ""
     for custom_filter in custom_filters:
         try:
-            g = ox.graph_from_place(city_name, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, which_result=which_result, buffer_dist=buffer_dist, clean_periphery=clean_periphery, custom_filter=custom_filter)
+            g = ox.graph_from_polygon(city_polygon, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, clean_periphery=clean_periphery, custom_filter=custom_filter)
         except Exception as err:
-            msg += "Filter:{}\nError:{}".format(custom_filter, err)
+            msg += "Filter:{}\nError:{}\n".format(custom_filter, err)
             continue
         if g is None:
             continue
@@ -205,7 +267,15 @@ def get_graph_data_for_single_city(city_name, network_type, custom_filters, proj
             continue
         else:
             g = g.to_undirected()
+            nodes = list(g.nodes(data=True))
+            
             df = nx.to_pandas_edgelist(g, source='u', target='v')
+            df['default_geometry'] = df.apply(lambda row: LineString(
+                                        [Point((g.nodes[row['u']]["x"], g.nodes[row['u']]["y"])), Point((g.nodes[row['v']]["x"], g.nodes[row['v']]["y"]))]
+                                            ), axis=1)
+            df.loc[ df['geometry'].isnull(), 'geometry'] = df.loc[df['geometry'].isnull(), 'default_geometry']
+            df.drop('default_geometry', axis=1, inplace=True)
+ 
             gdf = gpd.GeoDataFrame(df, geometry = 'geometry', crs = ox.settings.default_crs)
             gdf = gdf.to_crs(project_crs)
             gdfTotal = pd.concat([gdfTotal, gdf])
@@ -266,13 +336,18 @@ def get_ways_for_multiple_cities(city_names, tags, project_crs, filename, output
 
     return city_ways
 
-def get_graph_data_for_multiple_cities(city_names, network_type, custom_filters, project_crs, filename, output_dir=None):
+def get_graph_data_for_multiple_cities(city_names, boundary_indices, network_type, custom_filters, project_crs, filename, output_dir=None):
 
     city_data = {}
-    for city_name in city_names:
+    for i, city_name in enumerate(city_names):
+        print("\nGetting {} {}\n".format(city_name, filename))
         result = {'data':None, 'note':'', 'area_name':city_name}
         try:
-            result = get_graph_data_for_single_city(city_name, network_type, custom_filters, project_crs)
+            gdf_city_boundary = load_city_boundary(city_name, output_dir, index = boundary_indices[i])
+            city_polygon = gdf_city_boundary["geometry"].unary_union
+            res = get_graph_data_for_single_city(city_polygon, network_type, custom_filters, project_crs)
+            result['data'] = res['data']
+            result['note'] = res['note']
         except Exception as e:
             print(city_name, e)
             result['note'] = str(e)
@@ -301,17 +376,26 @@ def save_single_city_data(city_result, filename, output_dir):
     if os.path.exists(city_dir)==False:
         os.mkdir(city_dir)
 
+
+    note_file_name = "note_{}.txt".format(os.path.splitext(filename)[0])
+    note_path = os.path.join(city_dir, note_file_name)
+    data_path = os.path.join(city_dir, filename)
+
+    # Delete existing data since it is now outdated
+    if os.path.exists(note_path):
+        os.remove(note_path)
+    if os.path.exists(data_path):
+        os.remove(data_path)
+
     if city_result['data'] is not None:
         # Remove columns that contain lists - these tend to be columns that contain information about the component nodes of the way
         for col in city_result['data'].columns:
             if city_result['data'][col].map(lambda x: isinstance(x, (list, tuple))).any():
-                city_result['data'].drop(col, axis=1, inplace=True)
-                print("'{}' column removed from {} data".format(col, city_name))
+                city_result['data'].loc[ city_result['data'][col].map(lambda x: isinstance(x, (list, tuple))), col ] = city_result['data'].loc[ city_result['data'][col].map(lambda x: isinstance(x, (list, tuple))), col ].map(lambda x: ":".join(str(i) for i in x))
         
-        city_result['data'].to_file(os.path.join(city_dir, filename), driver = "GPKG")
+        city_result['data'].to_file(data_path, driver = "GPKG")
     else:
-        note_file_name = "note_{}.txt".format(os.path.splitext(filename)[0])
-        with open(os.path.join(city_dir, note_file_name), 'w') as f:
+        with open(note_path, 'w') as f:
             note = city_result['note']
             try:
                 f.write(note)
@@ -355,11 +439,15 @@ def load_city_data(cities, filename, output_dir, project_crs):
             note_file_name = "note_{}.txt".format(os.path.splitext(filename)[0])
             note_path = os.path.join(output_dir, city_name, note_file_name)
             note = None
-            with open(note_path, 'r') as f:
-                note = f.readline()
-            print("{}: {}".format(city_name, note))
-            result['note']=note
 
+            if os.path.exists(note_path)==True:
+                with open(note_path, 'r') as f:
+                    note = "\n".join(f.readlines())
+                print("{}: {}".format(city_name, note))
+            else:
+                note="note missing"
+            
+            result['note']=note
             if 'Empty dataframe' in note:
                 result['data'] = gdf
 
@@ -378,3 +466,30 @@ def load_city_data(cities, filename, output_dir, project_crs):
         city_kerbs[city_name] = result
 
     return city_kerbs
+
+def available_city_data(cities, output_dir, ext = None):
+
+    dfFiles = pd.DataFrame({'city':[], 'files':[]})
+    for city_name in cities:
+        result = {'city':[], 'files':[]}
+
+        city_data_dir = os.path.join(output_dir, city_name)
+        if os.path.isdir(city_data_dir)==False:
+            print(city_data_dir)
+            continue
+        city_data_files = os.listdir(city_data_dir)
+
+        if ext is not None:
+            city_data_files = [i for i in city_data_files if ".{}".format(ext) in i]
+
+        result['city'] = [city_name]*len(city_data_files)
+        result['files'] = city_data_files
+
+        df = pd.DataFrame(result)
+        dfFiles = pd.concat([dfFiles, df])
+
+    dfFiles['present']=1
+    dfFiles = dfFiles.set_index(['city','files']).unstack().reset_index()
+    dfFiles.columns = [i[1] if i[1]!="" else i[0] for i in dfFiles.columns]
+    
+    return dfFiles

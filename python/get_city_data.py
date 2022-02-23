@@ -3,9 +3,11 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import osmnx as ox
-from unidecode import unidecode
+#from unidecode import unidecode
 
 import osm_utils as osmu
+import importlib
+importlib.reload(osmu)
 
 
 #############################
@@ -16,12 +18,10 @@ import osm_utils as osmu
 #
 #############################
 merc_crs = {'init' :'epsg:3857'}
-output_dir = "..//data//world"
+output_dir = "..//data//urban_access_cities"
 
-footway_tags = {'footway':'sidewalk','highway':'footway'}
-carriageway_tags = {}
-
-
+# Change some config settings
+ox.config(timeout = 400, useful_tags_way = ox.settings.useful_tags_way+['sidewalk'])
 
 ############################
 #
@@ -31,21 +31,32 @@ carriageway_tags = {}
 #
 ############################
 
-countries = ['United Kingdom', 'France', 'Spain', 'Japan', 'Germany', 'China', 'United States of America', 'Columbia', 'Chile', 'Iraq', 'Egypt']
+#countries = ['United Kingdom', 'France', 'Spain', 'Japan', 'Germany', 'China', 'United States of America', 'Columbia', 'Chile', 'Iraq', 'Egypt']
 
-# Load world cities data, access from https://data.london.gov.uk/dataset/global-city-population-estimates
-dfCityPop = pd.read_csv("../data/world/global-city-population-estimates.csv", encoding = 'latin')
+# Load urban accessibility city data
+dfCityPop = pd.read_csv("../data/AllCities-Urban access across the globe.csv", delimiter="\t")
+dfCityPop.dropna(axis=0, how='all', inplace=True)
 
-# Filter to select just top n cities per country
-n = 2
-dfCityPop = dfCityPop.groupby("Country or area").apply(lambda df: df.sort_values(by='2020').iloc[:min(df.shape[0], n)])
+dfNameAlias = pd.read_csv(os.path.join(output_dir, "name_alias.csv"))
 
-# Clean city names
-dfCityPop['city_name'] = dfCityPop['Urban Agglomeration'].map(lambda s: unidecode(s))
+dfCityPop['nm_cntry'] = dfCityPop['City'] + ", " + dfCityPop['Country']
+dfCityPop = pd.merge(dfCityPop, dfNameAlias, on="nm_cntry", how = 'left')
+dfCityPop['search_term'] = dfCityPop['nm_cntry_alias']
+dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'search_term'] = dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'nm_cntry']
 
-dfCityPop['nm_cntry'] = dfCityPop['city_name'] + ", " + dfCityPop['Country or area']
-cities = dfCityPop.loc[ dfCityPop['Country or area'].isin(countries), 'nm_cntry'].values
+cities = dfCityPop['search_term'].values
+boundary_indices = dfCityPop['boundary_index'].values
 
+
+############################
+#
+#
+# Get administrative boundaries of cities
+#
+#
+############################
+
+osmu.get_city_administrative_boundaries(cities, output_dir, limit=4)
 
 ############################
 #
@@ -55,10 +66,16 @@ cities = dfCityPop.loc[ dfCityPop['Country or area'].isin(countries), 'nm_cntry'
 #
 #############################
 network_type = 'drive'
+walking_type = 'walk'
 footways_filters =  ['["highway"="footway"]','["footway"="sidewalk"]']
 kerb_filters = ['["barrier"="kerb"]','["kerb"]']
+sidewalk_filters = ['["sidewalk"~"both|left|right"]']
+no_sidewalk_filters = ['["sidewalk"="no"]']
 
-city_roads = osmu.get_graph_data_for_multiple_cities(cities, network_type, [None], merc_crs, "roads.gpkg", output_dir=output_dir)
-city_footways = osmu.get_graph_data_for_multiple_cities(cities, None, footways_filters, merc_crs, "footways.gpkg", output_dir=output_dir)
-city_kerbs = osmu.get_graph_data_for_multiple_cities(cities, None, kerb_filters, merc_crs, "kerbs.gpkg", output_dir=output_dir)
+city_roads = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, network_type, [None], merc_crs, "roads.gpkg", output_dir=output_dir)
+city_footways = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, footways_filters, merc_crs, "footways.gpkg", output_dir=output_dir)
+city_kerbs = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, kerb_filters, merc_crs, "kerbs.gpkg", output_dir=output_dir)
 
+city_walking_network = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, walking_type, [None], merc_crs, "walk_network.gpkg", output_dir=output_dir)
+city_sidewalks = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, sidewalk_filters, merc_crs, "sidewalks.gpkg", output_dir=output_dir)
+city_no_sidewalk = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, no_sidewalk_filters, merc_crs, "no_sidewalks.gpkg", output_dir=output_dir)
