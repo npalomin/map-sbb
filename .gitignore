@@ -4,6 +4,7 @@
 # Folders
 python/cache/*
 python/_pycache_/*
+python/.ipynb_checkpoints/*
 
 # Files
 .Rproj.user
