@@ -20,7 +20,7 @@ from matplotlib import pyplot as plt
 #
 #############################
 merc_crs = {'init' :'epsg:3857'}
-output_dir = "..//data//urban_access_cities"
+output_dir = "..//data//uk_towns_cities"
 
 
 ############################
@@ -30,7 +30,7 @@ output_dir = "..//data//urban_access_cities"
 #
 #
 ############################
-
+'''
 dfCityPop = pd.read_csv("../data/AllCities-Urban access across the globe.csv", delimiter="\t")
 dfCityPop.dropna(axis=0, how='all', inplace=True)
 
@@ -57,6 +57,15 @@ dfCityPop['Group'] = dfCityPop['Country'].replace(cntry_groups)
 
 # Get lookup from new city search terms to country group
 search_term_to_group = dfCityPop.set_index('search_term')['Group'].to_dict()
+'''
+
+# UK cities
+gdfTC = gpd.read_file("../data/Major_Towns_and_Cities_(December_2015)_Boundaries_V2.geojson")
+cities = gdfTC['TCITY15NM'].values
+
+gdfTC['group'] = 1
+search_term_to_group = gdfTC.set_index('TCITY15NM')['group'].to_dict()
+
 
 #############################
 #
@@ -65,10 +74,10 @@ search_term_to_group = dfCityPop.set_index('search_term')['Group'].to_dict()
 #
 #
 #############################
-dfFiles = osmu.available_city_data(cities, output_dir, ext = None)
-dfFiles.to_csv(os.path.join(output_dir, 'file_downloaded.csv'), index=False)
+#dfFiles = osmu.available_city_data(cities, output_dir, ext = None)
+#Files.to_csv(os.path.join(output_dir, 'file_downloaded.csv'), index=False)
 
-missing_roads_and_footways_data = dfFiles.loc[ (dfFiles['roads.gpkg'].isnull()) & (dfFiles['footways.gpkg'].isnull()), 'city'].values
+#missing_roads_and_footways_data = dfFiles.loc[ (dfFiles['roads.gpkg'].isnull()) & (dfFiles['footways.gpkg'].isnull()), 'city'].values
 
 #############################
 #
@@ -79,10 +88,6 @@ missing_roads_and_footways_data = dfFiles.loc[ (dfFiles['roads.gpkg'].isnull()) 
 ############################
 
 dataset_names = ['roads','walk_network','footways','sidewalks','no_sidewalks']
-
-datasets = {}
-for dataset_name in dataset_names:
-	datasets[dataset_name] = osmu.load_city_data(cities, '{}.gpkg'.format(dataset_name), output_dir, merc_crs)
 
 ###########################
 #
@@ -95,10 +100,10 @@ for dataset_name in dataset_names:
 # Initialise data frame
 dfTotal = pd.DataFrame()
 
-# Loop through cities
+# Loop through datasets
 for dataset_name in dataset_names:
-	dataset = datasets[dataset_name]
-
+	dataset = osmu.load_city_data(cities, '{}.gpkg'.format(dataset_name), output_dir, merc_crs)
+	# Loop through cities
 	city_data = {}
 	for city_name in cities:
 		result = dataset[city_name]
@@ -135,10 +140,14 @@ for dataset_name in dataset_names:
 	# Combine with total dataframe
 	dfTotal = pd.concat([dfTotal, df])
 
+	dataset = None
+
 # Reformat the data
 dfTotal = dfTotal.T
 dfTotal.index.name = 'city_name'
 dfTotal.reset_index(inplace=True)
+
+dfTotal.dropna(subset=['walk_network_length'], inplace=True)
 
 dfTotal['footways_coverage'] = dfTotal.apply(lambda row: row['footways_length'] / (2*row['walk_network_length']), axis=1)
 dfTotal['sidewalks_coverage'] = dfTotal.apply(lambda row: row['sidewalks_length'] / (2*row['walk_network_length']), axis=1)
@@ -149,7 +158,8 @@ dfTotal['walk_network_coverage'] = dfTotal['walk_network_length'] / dfTotal['roa
 
 dfTotal.sort_values(by = 'footways_coverage', ascending=False, inplace=True)
 
-dfTotal.to_csv(os.path.join(output_dir, 'urban_access_cities_footways_coverage_new.csv'), index=False)
+coverage_file_name = 'uk_cities_footways_coverage.csv'
+dfTotal.to_csv(os.path.join(output_dir, coverage_file_name), index=False)
 
 
 ###############################
@@ -160,7 +170,7 @@ dfTotal.to_csv(os.path.join(output_dir, 'urban_access_cities_footways_coverage_n
 #
 ###############################
 
-dfTotal = pd.read_csv(os.path.join(output_dir, 'urban_access_cities_footways_coverage_new.csv'))
+dfTotal = pd.read_csv(os.path.join(output_dir, coverage_file_name))
 
 # Make a figure
 def bar_chart(series, series_label, ylabel, title, img_path):
@@ -176,7 +186,7 @@ def bar_chart(series, series_label, ylabel, title, img_path):
     return f, ax
 
 df = dfTotal.set_index('city_name')
-f, ax = bar_chart(df['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\urban_access_footways_coverage_walking_network.png")
+f, ax = bar_chart(df['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\uk_cities\\urban_access_footways_coverage_walking_network.png")
 
 
 def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,10), labelsize = 14, titlesize = 20, pt_size=20):
@@ -216,12 +226,12 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 	return f, ax
 
 data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
-img_path = "..\\images\\coverage_distributions.png"
+img_path = "..\\images\\uk_cities\\coverage_distributions.png"
 f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
 
 df = dfTotal.reindex(columns = ['city_name', 'footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalks_coverage'})
 data_cols = ['footways_coverage', 'sidewalks_coverage']
-img_path = "..\\images\\coverage_distributions_all_sidewalk_combined.png"
+img_path = "..\\images\\uk_cities\\coverage_distributions_all_sidewalk_combined.png"
 f, ax = violin_plot(df, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
 
 
@@ -235,7 +245,6 @@ f, ax = violin_plot(df, data_cols, 'Coverage Distributions', img_path, search_te
 import scipy
 import statsmodels.api as sm
 import itertools
-import seaborn as sns
 
 # Convert cols to numeric
 for c in ['Auto', 'Transit','Walking', 'Cycling']:
@@ -265,7 +274,7 @@ for i in range(len(corr_cols)):
     for j in range(len(corr_cols)):
         text = ax.text(j, i, FootwayCoor[i, j],
                        ha="center", va="center", color="w")
-f.savefig("..\\images\\accessibility_correlation.png")
+f.savefig("..\\images\\uk_cities\\accessibility_correlation.png")
 
 # Need to try controlling for population
 model = sm.formula.ols("footways_coverage ~ Walking_pp", dfCityPop).fit()

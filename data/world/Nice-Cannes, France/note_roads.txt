@@ -1,3 +1,0 @@
-Filter:None
-Error:Nominatim could not geocode query "Nice-Cannes, France" to polygonal boundaries
-OSM query returned no data
