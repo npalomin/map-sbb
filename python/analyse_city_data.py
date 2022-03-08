@@ -197,7 +197,7 @@ img_path = os.path.join(img_dir, "urban_access_footways_coverage_walking_network
 f, ax = bar_chart(df['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', img_path)
 
 
-def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,10), labelsize = 14, titlesize = 20, pt_size=20):
+def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,10), labelsize = 14, titlesize = 20, pt_size=20, legend_title = None):
 	f, ax = plt.subplots(figsize = (10,10))
 
 	df.dropna(subset = data_cols, inplace=True)
@@ -223,7 +223,7 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 		dfgroup = df_scatter.loc[ df_scatter['group']==g]
 		ax2.scatter(dfgroup['x']+xi, dfgroup['y'], color = c, alpha = 0.5, label = g, s = pt_size)
 	
-	ax2.legend()
+	ax2.legend(title=legend_title)
 	ax2.set_axis_off()
 
 	ax.set_xticks(pos)
@@ -237,15 +237,15 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
 img_path = os.path.join(img_dir, "coverage_distributions.png")
 img_path_pop = os.path.join(img_dir, "coverage_distributions_groupbypop.png")
-f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
-f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path_pop, search_term_to_popquant, figsize = (10,10), pt_size=20)
+f, ax = violin_plot(dfTotal, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+f, ax = violin_plot(dfTotal, data_cols, None, img_path_pop, search_term_to_popquant, figsize = (10,10), pt_size=20, legend_title = "Population")
 
 df = dfTotal.reindex(columns = ['city_name', 'footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalks_coverage'})
 data_cols = ['footways_coverage', 'sidewalks_coverage']
 img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined.png")
 img_path_pop = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop.png")
-f, ax = violin_plot(df, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
-f, ax = violin_plot(df, data_cols, 'Coverage Distributions', img_path_pop, search_term_to_popquant, figsize = (10,10), pt_size=20)
+f, ax = violin_plot(df, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+f, ax = violin_plot(df, data_cols, None, img_path_pop, search_term_to_popquant, figsize = (10,10), pt_size=20, legend_title = "Population")
 
 
 ############################
