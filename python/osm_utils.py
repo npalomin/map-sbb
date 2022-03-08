@@ -1,4 +1,5 @@
 # IPython log file
+import numpy as np
 import pandas as pd
 import geopandas as gpd
 import osmnx as ox
@@ -506,3 +507,15 @@ def available_city_data(cities, output_dir, ext = None):
     dfFiles.columns = [i[1] if i[1]!="" else i[0] for i in dfFiles.columns]
     
     return dfFiles
+
+
+def format_float_sf(f, sf):
+    p10 = np.floor(np.log10(f))
+    nd = -int(p10)+sf-1
+    f_ = np.round(f, nd)
+    s = "{:.{}f}".format(f_, nd)
+    return s
+
+def format_str_interval(interval, scale_factor = 1000000, sf = 2):
+    l, r =  [ format_float_sf(i/scale_factor, sf) for i in [interval.left, interval.right] ]
+    return "{}-{}m".format(l, r)

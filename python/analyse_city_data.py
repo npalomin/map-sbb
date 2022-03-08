@@ -20,7 +20,12 @@ from matplotlib import pyplot as plt
 #
 #############################
 merc_crs = {'init' :'epsg:3857'}
-output_dir = "..//data//uk_towns_cities"
+
+study_area = "urban_access_cities"# uk_towns_cities
+
+output_dir = "..//data//"+study_area
+img_dir = "..\\images\\"+study_area
+coverage_file_name = study_area+'_footways_coverage.csv'
 
 
 ############################
@@ -30,7 +35,6 @@ output_dir = "..//data//uk_towns_cities"
 #
 #
 ############################
-'''
 dfCityPop = pd.read_csv("../data/AllCities-Urban access across the globe.csv", delimiter="\t")
 dfCityPop.dropna(axis=0, how='all', inplace=True)
 
@@ -55,17 +59,21 @@ cntry_groups = {'United States': 'US+Canada',
 
 dfCityPop['Group'] = dfCityPop['Country'].replace(cntry_groups)
 
+# Also group by population
+dfCityPop['TotalPopQuantile'] = pd.qcut(dfCityPop['TotalPopulation'], 4).map(lambda x: osmu.format_str_interval(x))
+
 # Get lookup from new city search terms to country group
 search_term_to_group = dfCityPop.set_index('search_term')['Group'].to_dict()
-'''
+search_term_to_popquant = dfCityPop.set_index('search_term')['TotalPopQuantile'].to_dict()
 
 # UK cities
+'''
 gdfTC = gpd.read_file("../data/Major_Towns_and_Cities_(December_2015)_Boundaries_V2.geojson")
 cities = gdfTC['TCITY15NM'].values
 
 gdfTC['group'] = 1
 search_term_to_group = gdfTC.set_index('TCITY15NM')['group'].to_dict()
-
+'''
 
 #############################
 #
@@ -96,7 +104,7 @@ dataset_names = ['roads','walk_network','footways','sidewalks','no_sidewalks']
 #
 #
 ###########################
-
+'''
 # Initialise data frame
 dfTotal = pd.DataFrame()
 
@@ -158,9 +166,8 @@ dfTotal['walk_network_coverage'] = dfTotal['walk_network_length'] / dfTotal['roa
 
 dfTotal.sort_values(by = 'footways_coverage', ascending=False, inplace=True)
 
-coverage_file_name = 'uk_cities_footways_coverage.csv'
 dfTotal.to_csv(os.path.join(output_dir, coverage_file_name), index=False)
-
+'''
 
 ###############################
 #
@@ -186,7 +193,8 @@ def bar_chart(series, series_label, ylabel, title, img_path):
     return f, ax
 
 df = dfTotal.set_index('city_name')
-f, ax = bar_chart(df['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', "..\\images\\uk_cities\\urban_access_footways_coverage_walking_network.png")
+img_path = os.path.join(img_dir, "urban_access_footways_coverage_walking_network.png")
+f, ax = bar_chart(df['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', img_path)
 
 
 def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,10), labelsize = 14, titlesize = 20, pt_size=20):
@@ -209,8 +217,9 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 	df_scatter['group'] = df_scatter['city_name'].replace(city_group_dict)
 
 	colors = ['red','green','blue','yellow','orange', 'grey']
-	x_displacements = np.linspace(-0.2, 0.2, len(colors))
-	for g, c, xi in zip(df_scatter['group'].unique(), colors, x_displacements):
+	groups = df_scatter['group'].unique()
+	x_displacements = np.linspace(-0.2, 0.2, len(groups))
+	for g, c, xi in zip(groups, colors, x_displacements):
 		dfgroup = df_scatter.loc[ df_scatter['group']==g]
 		ax2.scatter(dfgroup['x']+xi, dfgroup['y'], color = c, alpha = 0.5, label = g, s = pt_size)
 	
@@ -226,13 +235,17 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 	return f, ax
 
 data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
-img_path = "..\\images\\uk_cities\\coverage_distributions.png"
+img_path = os.path.join(img_dir, "coverage_distributions.png")
+img_path_pop = os.path.join(img_dir, "coverage_distributions_groupbypop.png")
 f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+f, ax = violin_plot(dfTotal, data_cols, 'Coverage Distributions', img_path_pop, search_term_to_popquant, figsize = (10,10), pt_size=20)
 
 df = dfTotal.reindex(columns = ['city_name', 'footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalks_coverage'})
 data_cols = ['footways_coverage', 'sidewalks_coverage']
-img_path = "..\\images\\uk_cities\\coverage_distributions_all_sidewalk_combined.png"
+img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined.png")
+img_path_pop = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop.png")
 f, ax = violin_plot(df, data_cols, 'Coverage Distributions', img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+f, ax = violin_plot(df, data_cols, 'Coverage Distributions', img_path_pop, search_term_to_popquant, figsize = (10,10), pt_size=20)
 
 
 ############################
@@ -274,7 +287,9 @@ for i in range(len(corr_cols)):
     for j in range(len(corr_cols)):
         text = ax.text(j, i, FootwayCoor[i, j],
                        ha="center", va="center", color="w")
-f.savefig("..\\images\\uk_cities\\accessibility_correlation.png")
+
+img_path = os.path.join(img_dir, "accessibility_correlation.png")
+f.savefig(img_path)
 
 # Need to try controlling for population
 model = sm.formula.ols("footways_coverage ~ Walking_pp", dfCityPop).fit()
