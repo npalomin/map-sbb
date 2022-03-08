@@ -217,6 +217,19 @@ def get_city_administrative_boundaries(cities, output_dir, limit=4):
 
     return None
 
+def get_city_administrative_boundaries_from_geodataframe(gdf, name_col, output_dir):
+    total_res = {}
+    for i, city_name in enumerate(gdf[name_col]):
+        city_dir = os.path.join(output_dir, city_name)
+        if os.path.isdir(city_dir)==False:
+            os.mkdir(city_dir)
+
+        city_boundary = gdf.loc[gdf[name_col]==city_name]
+
+        city_boundary.to_file(os.path.join(city_dir, "boundary{}.gpkg".format(0)), driver='GPKG')
+
+    return None
+
 def load_city_boundary(city_name, output_dir, index=None):
 
     city_dir = os.path.join(output_dir, city_name)
