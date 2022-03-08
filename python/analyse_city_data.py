@@ -10,6 +10,8 @@ import importlib
 importlib.reload(osmu)
 
 from matplotlib import pyplot as plt
+from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
+import matplotlib.image as mpimg
 
 
 #############################
@@ -197,8 +199,9 @@ img_path = os.path.join(img_dir, "urban_access_footways_coverage_walking_network
 f, ax = bar_chart(df['footways_coverage'], 'footways_coverage', 'proportion of footway potential mapped', 'Footway Coverage', img_path)
 
 
-def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,10), labelsize = 14, titlesize = 20, pt_size=20, legend_title = None):
-	f, ax = plt.subplots(figsize = (10,10))
+def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,10), axes_bbox = [0,0,1,1], labelsize = 14, titlesize = 20, pt_size=20, legend_title = None):
+	f = plt.figure(figsize = figsize)
+	ax = f.add_axes(axes_bbox)
 
 	df.dropna(subset = data_cols, inplace=True)
 
@@ -231,8 +234,60 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 	ax.tick_params(labelsize = labelsize)
 	ax.set_title(title, fontsize=20)
 
-	f.savefig(img_path)
+	if img_path is not None:
+		f.savefig(img_path)
 	return f, ax
+
+def annotate_figure(f, ax, df_scatter, city_group_dict, img_path, offset, cities = None, data_col = "footways_coverage"):
+	
+	df_scatter['group'] = df_scatter['city_name'].replace(city_group_dict)
+	groups = list(df_scatter['group'].unique())
+	x_displacements = np.linspace(-0.2, 0.2, len(groups))
+	
+	if cities==None:
+		# get highest coverage value city in each group
+		cities = df_scatter.groupby("group").apply(lambda s: s.sort_values(by = data_col, ascending=False)['city_name'].values[0])
+	
+	# Add city name to plot
+	for city in cities:
+		y = df_scatter.loc[ df_scatter['city_name']==city, data_col].values[0]
+		g = df_scatter.loc[ df_scatter['city_name']==city, 'group'].values[0]
+		x = x_displacements[groups.index(g)]
+
+		ax.annotate(city, xy=(x, y), xycoords='data', xytext=(x+offset[0], y+offset[1]), textcoords='data',
+					arrowprops=dict(arrowstyle="->", connectionstyle="angle3,angleA=0,angleB=-90"))
+
+	f.savefig(img_path)
+
+	return f, ax
+
+def inset_figure(f, ax, df_scatter, city_group_dict, cities, inset_positions, zoom, inset_img_dir, img_path, data_col = "footways_coverage"):
+
+	df_scatter['group'] = df_scatter['city_name'].replace(city_group_dict)
+	groups = list(df_scatter['group'].unique())
+	x_displacements = np.linspace(-0.2, 0.2, len(groups))
+
+	# Add city name to plot
+	for i, city in enumerate(cities):
+
+		city_img_path = os.path.join(inset_img_dir, city+".png")
+		cityimg = mpimg.imread(city_img_path)
+
+		y = df_scatter.loc[ df_scatter['city_name']==city, data_col].values[0]
+		g = df_scatter.loc[ df_scatter['city_name']==city, 'group'].values[0]
+		x = x_displacements[groups.index(g)]
+
+		imagebox = OffsetImage(cityimg, zoom=zoom)
+		ab = AnnotationBbox(imagebox, (x, y), xycoords='data', xybox=inset_positions[i], boxcoords='figure fraction', frameon=False, pad=0.0, annotation_clip=None, 
+			box_alignment=(0.5, 0.5), bboxprops=None, arrowprops=dict(arrowstyle="->", connectionstyle="arc3"), fontsize=None)
+		
+		ax.add_artist(ab)
+
+	f.savefig(img_path)
+
+	return f, x
+
+
 
 data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
 img_path = os.path.join(img_dir, "coverage_distributions.png")
@@ -246,6 +301,18 @@ img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined.p
 img_path_pop = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop.png")
 f, ax = violin_plot(df, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
 f, ax = violin_plot(df, data_cols, None, img_path_pop, search_term_to_popquant, figsize = (10,10), pt_size=20, legend_title = "Population")
+
+
+# Illustrate which cities have higest coverage
+img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_annotated.png")
+annotate_figure(f, ax, df, search_term_to_popquant, img_path, (0.05,0.1), cities = None, data_col = "footways_coverage")
+
+
+# Add inset to show the street network of a particular city
+img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_imginset.png")
+cities = ['London, England', 'San Jose, United States']
+f, ax = violin_plot(df, data_cols, None, None, search_term_to_popquant, figsize = (15,20), axes_bbox= [0.1,0,0.8,0.75], pt_size=20, legend_title = "Population")
+inset_figure(f, ax, df, search_term_to_popquant, cities, [(0.2,0.7), (0.6, 0.8)], 0.35, img_dir, img_path, data_col = "footways_coverage")
 
 
 ############################
