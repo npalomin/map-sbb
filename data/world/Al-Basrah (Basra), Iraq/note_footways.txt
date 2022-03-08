@@ -1,4 +1,0 @@
-Filter:["highway"="footway"]
-Error:Nominatim could not geocode query "Al-Basrah (Basra), Iraq" to polygonal boundariesFilter:["footway"="sidewalk"]
-Error:Nominatim could not geocode query "Al-Basrah (Basra), Iraq" to polygonal boundaries
-OSM query returned no data

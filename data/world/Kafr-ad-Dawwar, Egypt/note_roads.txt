@@ -1,3 +1,0 @@
-Filter:None
-Error:Nominatim geocoder returned 0 results for query "Kafr-ad-Dawwar, Egypt"
-OSM query returned no data
