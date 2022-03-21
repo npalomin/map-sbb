@@ -44,8 +44,8 @@ dfCityPop = pd.merge(dfCityPop, dfNameAlias, on="nm_cntry", how = 'left')
 dfCityPop['search_term'] = dfCityPop['nm_cntry_alias']
 dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'search_term'] = dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'nm_cntry']
 
-cities = dfCityPop['search_term'].values[:1]
-boundary_indices = dfCityPop['boundary_index'].values[:1]
+cities = dfCityPop['search_term'].values
+boundary_indices = dfCityPop['boundary_index'].values
 
 # Load UK Towns and Cities boundaries
 #gdfTC = gpd.read_file("../data/Major_Towns_and_Cities_(December_2015)_Boundaries_V2.geojson")
@@ -88,7 +88,7 @@ tags_sidewalk = ["way['sidewalk'~'both|left|right']"]
 tags_no_sidewalk = ["way['sidewalk'='no']"]
 
 
-tags_walk_network_geoms = "way['highway']['area'!~'yes']['access'!~'private']['highway'!~'abandoned|construction|cycleway|motor|planned|platform|proposed|raceway']['foot'!~'no']['service'!~'private']['highway'!~'pedestrian']"
+tags_walk_network_geoms = ["['highway']['area'!~'yes']['access'!~'private']['highway'!~'abandoned|construction|cycleway|motor|planned|platform|proposed|raceway|pedestrian']['foot'!~'no']['service'!~'private']"]
 
 # Need to set columns wee are interested in
 
@@ -100,13 +100,14 @@ tags_walk_network_geoms = "way['highway']['area'!~'yes']['access'!~'private']['h
 #city_sidewalks = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, sidewalk_filters, merc_crs, "sidewalks.gpkg", output_dir=output_dir)
 #city_no_sidewalk = osmu.get_graph_data_for_multiple_cities(cities, boundary_indices, None, no_sidewalk_filters, merc_crs, "no_sidewalks.gpkg", output_dir=output_dir)
 
+metadata_cols = ["id", "timestamp", "uid", "user", "version", "changeset", 'geometry', 'highway', 'footway','sidewalk']
 
-#city_walking_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_walk_network_geoms, merc_crs, "walk_geometries.gpkg", output_dir=output_dir)
-city_hf_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_hf, merc_crs, "hf_geometries.gpkg", output_dir=output_dir, metadata_cols = ['geometry', 'highway', 'footway','sidewalk'])
-#city_fs_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_fs, merc_crs, "fs_geometries.gpkg", output_dir=output_dir)
-#city_hf_sf_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_hf_fs, merc_crs, "hf_sf_geometries.gpkg", output_dir=output_dir)
-#city_sidewalk_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_sidewalk, merc_crs, "sidewalk_geometries.gpkg", output_dir=output_dir)
-#city_no_sidewalk_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_no_sidewalk, merc_crs, "no_sidewalk_geometries.gpkg", output_dir=output_dir)
+city_walking_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_walk_network_geoms, merc_crs, "walk_geometries.gpkg", output_dir=output_dir, metadata_cols = metadata_cols)
+city_hf_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_hf, merc_crs, "hf_geometries.gpkg", output_dir=output_dir, metadata_cols = metadata_cols)
+city_fs_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_fs, merc_crs, "fs_geometries.gpkg", output_dir=output_dir, metadata_cols = metadata_cols)
+city_hf_sf_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_hf_fs, merc_crs, "hf_sf_geometries.gpkg", output_dir=output_dir, metadata_cols = metadata_cols)
+city_sidewalk_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_sidewalk, merc_crs, "sidewalk_geometries.gpkg", output_dir=output_dir, metadata_cols = metadata_cols)
+city_no_sidewalk_geometries = osmu.get_ways_for_multiple_cities(cities, boundary_indices, tags_no_sidewalk, merc_crs, "no_sidewalk_geometries.gpkg", output_dir=output_dir, metadata_cols = metadata_cols)
 
 '''
 
