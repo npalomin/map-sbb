@@ -419,4 +419,16 @@ dfMW = pd.DataFrame(data)
 dfMW.to_csv(os.path.join(output_dir, 'man-whitney-results.csv'), index=False)
 
 
+'''
+df = dfCityPop.dropna(subset = ['footways_coverage','Walking_pp'])
+print(scipy.stats.pearsonr( df.footways_coverage, df.Walking_pp))
 
+df = dfCityPop.dropna(subset = ['footways_coverage','Auto_pp'])
+print(scipy.stats.pearsonr( df.footways_coverage, df.Auto_pp))
+
+df = dfCityPop.dropna(subset = ['footways_coverage','Transit_pp'])
+print(scipy.stats.pearsonr( df.footways_coverage, df.Transit_pp))
+
+df = dfCityPop.dropna(subset = ['footways_coverage','Cycling_pp'])
+print(scipy.stats.pearsonr( df.footways_coverage, df.Cycling_pp))
+'''
