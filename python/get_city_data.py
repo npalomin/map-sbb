@@ -82,13 +82,13 @@ walk_network_filters = ['["highway"]["area"!~"yes"]["access"!~"private"]',
 				        '["foot"!~"no"]["service"!~"private"]']
 
 tags_hf = ["['highway'='footway']"]
-tags_fs = ["way['footway'='sidewalk']"]
+tags_fs = ["['footway'='sidewalk']"]
 tags_hf_fs = tags_hf + tags_fs
-tags_sidewalk = ["way['sidewalk'~'both|left|right']"]
-tags_no_sidewalk = ["way['sidewalk'='no']"]
+tags_sidewalk = ["['sidewalk'~'both|left|right']"]
+tags_no_sidewalk = ["['sidewalk'='no']"]
 
 
-tags_walk_network_geoms = ["['highway']['area'!~'yes']['access'!~'private']['highway'!~'abandoned|construction|cycleway|motor|planned|platform|proposed|raceway|pedestrian']['foot'!~'no']['service'!~'private']"]
+tags_walk_network_geoms = ["['highway']['area'!~'yes']['access'!~'private']['highway'!~'abandoned|construction|cycleway|motor|planned|platform|proposed|raceway|pedestrian|footway']['footway'!~'sidewalk']['foot'!~'no']['service'!~'private']"]
 
 # Need to set columns wee are interested in
 
@@ -113,47 +113,6 @@ city_no_sidewalk_geometries = osmu.get_ways_for_multiple_cities(cities, boundary
 
 # Noting how querys get made in osmnx
  query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
-
-# get example of osm filter for walk network
-osm_filter = ox.downloader._get_osm_filter(network_type) -> returns
-'["highway"]["area"!~"yes"]["access"!~"private"]["highway"!~"abandoned|construction|cycleway|motor|planned|platform|proposed|raceway"]["foot"!~"no"]["service"!~"private"]'
-
-query_str = """f"{overpass_settings};
-				(way{["highway"]["area"!~"yes"]["access"!~"private"]["highway"!~"abandoned|construction|cycleway|motor|planned|platform|proposed|raceway"]["foot"!~"no"]["service"!~"private"]}
-				(poly:'{polygon_coord_str}');>;);out;
-
-			"""
-
-# This is different from the filter I construct
-
-
-# Get geometries creates qurey using below. tags is a dictionary of tags
-_create_overpass_query(polygon_coord_str, tags)
-
-tags = {"highway":"footway", "footway":"sidewalk"} # expect this returns ways with either of these tags
-
-# Could override and pass query directly into 
-polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
-
-    components = "".join(components)
-    query = f"{overpass_settings};({components});out;"
-
-"[out:json][timeout:180];((node['highway'='footway'](poly:'polygon_coord_str');(._;>;););(way['highway'='footway'](poly:'polygon_coord_str');(._;>;););(relation['highway'='footway'](poly:'polygon_coord_str');(._;>;););(node['footway'='sidewalk'](poly:'polygon_coord_str');(._;>;););(way['footway'='sidewalk'](poly:'polygon_coord_str');(._;>;););(relation['footway'='sidewalk'](poly:'polygon_coord_str');(._;>;);););out;"
-
-"[out:json][timeout:180];((node['highway'='footway'](poly:'polygon_coord_str'	);););out;"
-"[out:json][timeout:400];((way['highway'='footway'](poly:''						);););out;
-
-(way['footway'='sidewalk'](poly:'polygon_coord_str');(._;>;););out;"
-
-response_json = overpass_request(data={"data": query_str})
-
-# I think it will be best to avoid using the tags variable and build the query ourselves
-
-[out:json][timeout:400];(way['highway'='footway'](poly:'');(._;>;););out;
-
-'''
-
-'''
 
 gdf_city_boundary = osmu.load_city_boundary(cities[0], output_dir, index = boundary_indices[0])
 city_polygon = gdf_city_boundary["geometry"].unary_union
