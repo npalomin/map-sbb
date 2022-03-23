@@ -84,10 +84,10 @@ search_term_to_group = gdfTC.set_index('TCITY15NM')['group'].to_dict()
 #
 #
 #############################
-#dfFiles = osmu.available_city_data(cities, output_dir, ext = None)
-#Files.to_csv(os.path.join(output_dir, 'file_downloaded.csv'), index=False)
+dfFiles = osmu.available_city_data(cities, output_dir, ext = None)
+dfFiles.to_csv(os.path.join(output_dir, 'file_downloaded.csv'), index=False)
 
-#missing_roads_and_footways_data = dfFiles.loc[ (dfFiles['roads.gpkg'].isnull()) & (dfFiles['footways.gpkg'].isnull()), 'city'].values
+missing_roads_and_footways_data = dfFiles.loc[ (dfFiles['walk_geometries.gpkg'].isnull()) & (dfFiles['fs_geometries.gpkg'].isnull()), 'city'].values
 
 #############################
 #
@@ -97,7 +97,7 @@ search_term_to_group = gdfTC.set_index('TCITY15NM')['group'].to_dict()
 #
 ############################
 
-dataset_names = ['roads','walk_network','footways','sidewalks','no_sidewalks']
+dataset_names = ['roads','walk_network','footways','sidewalks','no_sidewalks', 'walk_geometries', 'hf_geometries', 'fs_geometries', 'hf_sf_geometries', 'sidewalk_geometries', 'no_sidewalk_geometries']
 
 ###########################
 #
@@ -106,7 +106,6 @@ dataset_names = ['roads','walk_network','footways','sidewalks','no_sidewalks']
 #
 #
 ###########################
-'''
 # Initialise data frame
 dfTotal = pd.DataFrame()
 
@@ -128,7 +127,7 @@ for dataset_name in dataset_names:
 			gdf = result['data']
 
 			# Get total lengths of geometries
-			if dataset_name=='sidewalks':
+			if (dataset_name=='sidewalks') or (dataset_name=='sidewalk_geometries'):
 				# Need to account for whether sidewalk tage applies to both or one side of the road
 				length = gdf.loc[ gdf['sidewalk']=='both', 'geometry'].length.sum() * 2
 				length += gdf.loc[ gdf['sidewalk']!='both', 'geometry'].length.sum()
@@ -159,17 +158,30 @@ dfTotal.reset_index(inplace=True)
 
 dfTotal.dropna(subset=['walk_network_length'], inplace=True)
 
-dfTotal['footways_coverage'] = dfTotal.apply(lambda row: row['footways_length'] / (2*row['walk_network_length']), axis=1)
-dfTotal['sidewalks_coverage'] = dfTotal.apply(lambda row: row['sidewalks_length'] / (2*row['walk_network_length']), axis=1)
-dfTotal['no_sidewalks_coverage'] = dfTotal.apply(lambda row: row['no_sidewalks_length'] / (2*row['walk_network_length']), axis=1)
-dfTotal['all_sidewalks_coverage'] = dfTotal.apply(lambda row: (row['sidewalks_length'] + row['no_sidewalks_length']) / (2*row['walk_network_length']), axis=1)
+#
+# Old results using graph based osmnx function
+#
+#dfTotal['footways_coverage'] = dfTotal.apply(lambda row: row['footways_length'] / (2*row['walk_network_length']), axis=1)
+#dfTotal['sidewalks_coverage'] = dfTotal.apply(lambda row: row['sidewalks_length'] / (2*row['walk_network_length']), axis=1)
+#dfTotal['no_sidewalks_coverage'] = dfTotal.apply(lambda row: row['no_sidewalks_length'] / (2*row['walk_network_length']), axis=1)
+#dfTotal['all_sidewalks_coverage'] = dfTotal.apply(lambda row: (row['sidewalks_length'] + row['no_sidewalks_length']) / (2*row['walk_network_length']), axis=1)
 
-dfTotal['walk_network_coverage'] = dfTotal['walk_network_length'] / dfTotal['roads_length']
+#dfTotal['walk_network_coverage'] = dfTotal['walk_network_length'] / dfTotal['roads_length']
+
+#
+# new results using geometries based osmnx mathods
+#
+dfTotal['footways_coverage'] = dfTotal.apply(lambda row: row['fs_geometries_length'] / (2*row['walk_geometries_length']), axis=1)
+dfTotal['highway_footways_coverage'] = dfTotal.apply(lambda row: row['hf_geometries_length'] / (2*row['walk_geometries_length']), axis=1)
+dfTotal['sidewalks_coverage'] = dfTotal.apply(lambda row: row['sidewalk_geometries_length'] / (2*row['walk_geometries_length']), axis=1)
+dfTotal['no_sidewalks_coverage'] = dfTotal.apply(lambda row: row['no_sidewalk_geometries_length'] / (2*row['walk_geometries_length']), axis=1)
+dfTotal['all_sidewalks_coverage'] = dfTotal.apply(lambda row: (row['sidewalk_geometries_length'] + row['no_sidewalk_geometries_length']) / (2*row['walk_geometries_length']), axis=1)
+
+dfTotal['walk_network_length'] = dfTotal['walk_network_length'] / dfTotal['roads_length']
 
 dfTotal.sort_values(by = 'footways_coverage', ascending=False, inplace=True)
 
 dfTotal.to_csv(os.path.join(output_dir, coverage_file_name), index=False)
-'''
 
 ###############################
 #
