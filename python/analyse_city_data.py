@@ -156,7 +156,7 @@ dfTotal = dfTotal.T
 dfTotal.index.name = 'city_name'
 dfTotal.reset_index(inplace=True)
 
-dfTotal.dropna(subset=['walk_network_length'], inplace=True)
+dfTotal.dropna(subset=['walk_geometries_length'], inplace=True)
 
 #
 # Old results using graph based osmnx function
@@ -177,12 +177,11 @@ dfTotal['sidewalks_coverage'] = dfTotal.apply(lambda row: row['sidewalk_geometri
 dfTotal['no_sidewalks_coverage'] = dfTotal.apply(lambda row: row['no_sidewalk_geometries_length'] / (2*row['walk_geometries_length']), axis=1)
 dfTotal['all_sidewalks_coverage'] = dfTotal.apply(lambda row: (row['sidewalk_geometries_length'] + row['no_sidewalk_geometries_length']) / (2*row['walk_geometries_length']), axis=1)
 
-dfTotal['walk_network_length'] = dfTotal['walk_network_length'] / dfTotal['roads_length']
+dfTotal['walk_geometries_coverage'] = dfTotal['walk_geometries_length'] / dfTotal['roads_length']
 
 dfTotal.sort_values(by = 'footways_coverage', ascending=False, inplace=True)
 
 dfTotal.to_csv(os.path.join(output_dir, coverage_file_name), index=False)
-
 ###############################
 #
 #
