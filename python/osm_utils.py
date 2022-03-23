@@ -397,7 +397,9 @@ def way_geometries_from_polygon(polygon, tags):
             response_jsons.append(response_json)
 
     gdf = ox.geometries._create_gdf(response_jsons, None, None)
+    gdf.reset_index(inplace=True)
     gdf = gdf.loc[ gdf['element_type']=='way']
+    gdf = gdf.loc[ gdf['geometry'].type=='LineString']
 
     return gdf
 
