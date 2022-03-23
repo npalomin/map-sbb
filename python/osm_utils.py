@@ -307,21 +307,27 @@ def get_graph_data_for_single_city(city_polygon, network_type, custom_filters, p
     return result
 
 
-def get_way_data_for_single_city(city_name, tags, project_crs):
+def get_way_data_for_single_city(city_name, city_polygon, tags, project_crs, metadata_cols):
 
     result = {'data':None, 'note':'', 'area_name':city_name}
 
-    result['data'] = ox.geometries.geometries_from_place(city_name, tags, which_result=None, buffer_dist=None)
-    
-    # Select only ways
-    result['data'] = result['data'].loc['way']
+    # Might need process for formatting tags
+
+    msg = ""
+    try:
+        result['data'] = way_geometries_from_polygon(city_polygon, tags)
+    except Exception as err:
+        msg += "Filter:{}\nError:{}\n".format(tags, err)
 
     if result['data'] is None:
-        result['note'] = 'OSM query returned None'
+        result['note'] = 'OSM query returned None. Error msg:{}'.format(msg)
     elif result['data'].shape[0]==0:
         result['data'] = None
         result['note'] = 'Empty dataframe. No osm data found.'
     else:
+        # Select only required cols
+        if metadata_cols is not None:
+            result['data'] = result['data'].reindex(columns = metadata_cols)
         result['data'] = result['data'].to_crs(project_crs)
 
         # Calculate area of gdf and add into gdf
@@ -331,14 +337,19 @@ def get_way_data_for_single_city(city_name, tags, project_crs):
 
     return result
 
-def get_ways_for_multiple_cities(city_names, tags, project_crs, filename, output_dir=None):
+def get_ways_for_multiple_cities(city_names, boundary_indices, tags, project_crs, filename, output_dir=None, metadata_cols = None):
 
     city_ways = {}
-    for city_name in city_names:
+    for i, city_name in enumerate(city_names):
+        print("\nGetting {} {}\n".format(city_name, filename))
         result = {'data':None, 'note':'', 'area_name':city_name}
         try:
-            result = get_way_data_for_single_city(city_name, tags, project_crs)
-            
+            gdf_city_boundary = load_city_boundary(city_name, output_dir, index = boundary_indices[i])
+            city_polygon = gdf_city_boundary["geometry"].unary_union
+
+            res = get_way_data_for_single_city(city_name, city_polygon, tags, project_crs, metadata_cols)
+            result['data'] = res['data']
+            result['note'] = res['note']
         except Exception as e:
             print(city_name, e)
             result['note'] = str(e)
@@ -372,6 +383,25 @@ def get_graph_data_for_multiple_cities(city_names, boundary_indices, network_typ
             save_single_city_data(result, filename, output_dir)
 
     return city_data
+
+def way_geometries_from_polygon(polygon, tags):
+
+    overpass_settings = ox.downloader._make_overpass_settings()
+    polygon_coord_strs = ox.downloader._make_overpass_polygon_coord_strs(polygon)
+
+    response_jsons = []
+    for polygon_coord_str in polygon_coord_strs:
+        for t in tags:
+            query = f"{overpass_settings};(way{t}(poly:'{polygon_coord_str}');>;);out;"
+            response_json = ox.downloader.overpass_request(data={"data": query})
+            response_jsons.append(response_json)
+
+    gdf = ox.geometries._create_gdf(response_jsons, None, None)
+    gdf.reset_index(inplace=True)
+    gdf = gdf.loc[ gdf['element_type']=='way']
+    gdf = gdf.loc[ gdf['geometry'].type=='LineString']
+
+    return gdf
 
 def get_kerbs_for_multiple_cities(city_names, project_crs, output_dir = None):
     filename = 'kerbs.gpkg'
