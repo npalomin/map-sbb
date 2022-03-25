@@ -253,13 +253,13 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 	
 	lg = ax2.legend(prop={'size': legend_size})
 	lg.set_title(legend_title, prop={'size': legend_size})
-	##ax2.set_axis_off()
+	ax2.set_axis_off()
 
 	ax.set_xticks(pos)
 	ax.set_xticklabels(i.replace("_"," ").title() for i in data_cols)
 	ax.tick_params(axis='x', labelsize = labelsize)
 	ax.tick_params(axis='y', labelsize = labelsize-5)
-	ax2.tick_params(axis='y', labelsize = labelsize-5)
+	#ax2.tick_params(axis='y', labelsize = labelsize-5)
 	ax.set_title(title, fontsize=20)
 
 	if img_path is not None:
@@ -295,8 +295,12 @@ def inset_figure(f, ax, df_scatter, city_group_dict, cities, inset_positions, zo
 	groups = list(df_scatter['group'].unique())
 	x_displacements = np.linspace(-0.2, 0.2, len(groups))
 
+	if cities is None:
+		# get highest coverage value city in each group
+		cities = df_scatter.groupby("group").apply(lambda s: s.sort_values(by = data_col, ascending=False)['city_name'].values[0])
+
 	# Add city name to plot
-	for i, city in enumerate(cities):
+	for i, city in enumerate(cities[::-1]):
 
 		city_img_path = os.path.join(inset_img_dir, city+".png")
 		cityimg = mpimg.imread(city_img_path)
@@ -321,7 +325,7 @@ data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
 df = dfTotal.reindex(columns = ['city_name', 'footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalks_coverage'})
 data_cols = ['footways_coverage', 'sidewalks_coverage']
 
-'''
+
 img_path = os.path.join(img_dir, "coverage_distributions.png")
 img_path_pop = os.path.join(img_dir, "coverage_distributions_groupbypop.png")
 f, ax = violin_plot(dfTotal, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
@@ -337,13 +341,13 @@ f, ax = violin_plot(df, data_cols, None, img_path_pop, search_term_to_popquant, 
 # Illustrate which cities have higest coverage
 img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_annotated.png")
 annotate_figure(f, ax, df, search_term_to_popquant, img_path, (0.05,0.1), cities = None, data_col = "footways_coverage")
-'''
+
 
 # Add inset to show the street network of a particular city
 img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_imginset.png")
 cities = ['London, England', 'San Jose, United States']
-f, ax = violin_plot(df, data_cols, None, None, search_term_to_popquant, figsize = (30,30), axes_bbox= [0.3,0.05,0.5,0.8], labelsize = 30, legend_size = 20, pt_size=250, legend_title = "Population")
-inset_figure(f, ax, df, search_term_to_popquant, cities, [(0.1,0.2), (0.1, 0.55)], 0.5, img_dir, img_path, data_col = "footways_coverage")
+f, ax = violin_plot(df, data_cols, None, None, search_term_to_popquant, figsize = (30,40), axes_bbox= [0.15,0.1,0.75,0.6], labelsize = 30, legend_size = 20, pt_size=250, legend_title = "Population")
+inset_figure(f, ax, df, search_term_to_popquant, None, [(0.15,0.8), (0.4, 0.8), (0.65, 0.8), (0.9, 0.8)], 0.5, img_dir, img_path, data_col = "footways_coverage")
 
 
 ############################
