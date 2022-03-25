@@ -347,7 +347,7 @@ annotate_figure(f, ax, df, search_term_to_popquant, img_path, (0.05,0.1), cities
 img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_imginset.png")
 cities = ['London, England', 'San Jose, United States']
 f, ax = violin_plot(df, data_cols, None, None, search_term_to_popquant, figsize = (30,40), axes_bbox= [0.15,0.1,0.75,0.6], labelsize = 30, legend_size = 20, pt_size=250, legend_title = "Population")
-inset_figure(f, ax, df, search_term_to_popquant, None, [(0.15,0.8), (0.4, 0.8), (0.65, 0.8), (0.9, 0.8)], 0.5, img_dir, img_path, data_col = "footways_coverage")
+inset_figure(f, ax, df, search_term_to_popquant, None, [(0.15,0.8), (0.4, 0.8), (0.65, 0.8), (0.9, 0.8)], 0.3, img_dir, img_path, data_col = "footways_coverage")
 
 
 ############################
