@@ -319,7 +319,29 @@ def inset_figure(f, ax, df_scatter, city_group_dict, cities, inset_positions, zo
 
 	return f, x
 
+def lolipop_figure(df, data_cols, rename_dict, title, scale_data = False, figsize = (10,10), labelsize = 14, legend_size = 15, titlesize = 20, pt_size=20, legend_title = None, output_path = 'coverage_lolipop.png'):
+	
+	# Reorder it following the values of the first value:
+	ordered_df = df.sort_values(by=data_cols[0])
+	my_range=range(1,len(df.index)+1)
 
+	f, ax = plt.subplots(figsize=figsize)
+	 
+	# The horizontal plot is made using the hline function
+	ax.vlines(x=my_range, ymin=ordered_df[data_cols[0]], ymax=ordered_df[data_cols[1]], color='grey', alpha=0.4)
+	ax.scatter(my_range, ordered_df[data_cols[0]], color='skyblue', alpha=1, label=rename_dict[data_cols[0]])
+	ax.scatter(my_range, ordered_df[data_cols[1]], color='green', alpha=0.4 , label=rename_dict[data_cols[1]])
+	ax.legend()
+	 
+	# Add title and axis names
+	ax.set_xticks([])
+	ax.tick_params(axis='y', labelsize = labelsize)
+	plt.title(title, fontdict = {'fontsize':titlesize})
+	#ax.set_ylabel('Value of the variables')
+
+	f.savefig(output_path)
+
+	return f, ax
 
 data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
 df = dfTotal.reindex(columns = ['city_name', 'footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalks_coverage'})
@@ -350,6 +372,17 @@ f, ax = violin_plot(df, data_cols, None, None, search_term_to_popquant, figsize 
 inset_figure(f, ax, df, search_term_to_popquant, None, [(0.15,0.8), (0.4, 0.8), (0.65, 0.8), (0.9, 0.8)], 0.3, img_dir, img_path, data_col = "footways_coverage")
 
 
+#
+# Lolipop plot showing difference in for each city
+#
+img_path = os.path.join(img_dir, "coverage_lolipop.png")
+data_cols = ['footways_coverage','highway_footways_coverage']
+rename_dict = dict(zip(data_cols, ['["footway"="sidewalk"] Coverage', '["highway"="footway"] Coverage'] ))
+f, ax = lolipop_figure(df, data_cols, rename_dict, "Comparing Coverage of Footway Tagging Conventions", scale_data = False, figsize = (10,10), labelsize = 16, legend_size = 15, titlesize = 18, pt_size=20, legend_title = None, output_path = img_path)
+
+img_path = os.path.join(img_dir, "coverage_lolipop_scaled.png")
+f, ax = lolipop_figure(df, data_cols, rename_dict, "Comparing Coverage of Footway Tagging Conventions", scale_data = True, figsize = (10,10), labelsize = 16, legend_size = 15, titlesize = 18, pt_size=20, legend_title = None, output_path = img_path)
+
 ############################
 #
 #
@@ -366,6 +399,7 @@ for c in ['Auto', 'Transit','Walking', 'Cycling']:
 	dfCityPop[c] = dfCityPop[c].replace({'-':np.nan}).astype(float)
 	dfCityPop[c+'_pp'] = dfCityPop[c] / dfCityPop['TotalPopulation']
 	dfCityPop[c+'_pp_log'] = np.log(dfCityPop[c]) / np.log(dfCityPop['TotalPopulation'])
+	dfCityPop[c+"_pp"+"_rank"] = dfCityPop[c+"_pp"].rank()
 
 
 
@@ -454,4 +488,17 @@ print(scipy.stats.pearsonr( df.footways_coverage, df.Transit_pp))
 
 df = dfCityPop.dropna(subset = ['footways_coverage','Cycling_pp'])
 print(scipy.stats.pearsonr( df.footways_coverage, df.Cycling_pp))
+
+# Rank correlations
+df = dfCityPop.dropna(subset = ['footways_coverage_rank','Walking_pp_rank'])
+print(scipy.stats.spearmanr( df.footways_coverage_rank, df.Walking_pp_rank))
+
+df = dfCityPop.dropna(subset = ['footways_coverage_rank','Auto_pp_rank'])
+print(scipy.stats.spearmanr( df.footways_coverage_rank, df.Auto_pp_rank))
+
+df = dfCityPop.dropna(subset = ['footways_coverage_rank','Transit_pp_rank'])
+print(scipy.stats.spearmanr( df.footways_coverage_rank, df.Transit_pp_rank))
+
+df = dfCityPop.dropna(subset = ['footways_coverage_rank','Cycling_pp_rank'])
+print(scipy.stats.spearmanr( df.footways_coverage_rank, df.Cycling_pp_rank))
 '''
