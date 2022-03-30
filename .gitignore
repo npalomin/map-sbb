@@ -1,11 +1,9 @@
 # File types
 *.pyc
-
 # Folders
 python/cache/*
 python/_pycache_/*
 python/.ipynb_checkpoints/*
-
 # Files
 .Rproj.user
 .Rhistory
@@ -25,10 +23,9 @@ python/.ipynb_checkpoints/*
 /data/new_york/geo_export_9840f34a-da42-4a5c-bbc9-99eb13a6b5d8.prj
 /data/new_york/geo_export_9840f34a-da42-4a5c-bbc9-99eb13a6b5d8.shp
 /data/new_york/geo_export_9840f34a-da42-4a5c-bbc9-99eb13a6b5d8.shx
-
 /data/urban_access_cities/*
 ~/data/urban_access_cities/name_alias.csv
 ~/data/urban_access_cities/urban_access_cities_footways_coverage.csv
-
 /data/archive/*
 /data/uk_towns_cities/*
+.DS_Store
