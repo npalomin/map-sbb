@@ -218,6 +218,9 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 	f = plt.figure(figsize = figsize)
 	ax = f.add_axes(axes_bbox)
 
+	ax.spines['top'].set_visible(False)
+	ax.spines['right'].set_visible(False)
+
 	df.dropna(subset = data_cols, inplace=True)
 
 	data = df[data_cols].values
@@ -263,10 +266,10 @@ def violin_plot(df, data_cols, title, img_path, city_group_dict, figsize = (10,1
 	ax.set_title(title, fontsize=20)
 
 	if img_path is not None:
-		f.savefig(img_path)
+		f.savefig(img_path, dpi = 300)
 	return f, ax
 
-def annotate_figure(f, ax, df_scatter, city_group_dict, img_path, offset, cities = None, data_col = "footways_coverage"):
+def annotate_figure(f, ax, df_scatter, city_group_dict, img_path, offsets, cities = None, data_col = "footways_coverage", fontsize = 25):
 	
 	df_scatter['group'] = df_scatter['city_name'].replace(city_group_dict)
 	groups = list(df_scatter['group'].unique())
@@ -277,13 +280,30 @@ def annotate_figure(f, ax, df_scatter, city_group_dict, img_path, offset, cities
 		cities = df_scatter.groupby("group").apply(lambda s: s.sort_values(by = data_col, ascending=False)['city_name'].values[0])
 	
 	# Add city name to plot
-	for city in cities:
+	for i, city in enumerate(cities[::-1]):
 		y = df_scatter.loc[ df_scatter['city_name']==city, data_col].values[0]
 		g = df_scatter.loc[ df_scatter['city_name']==city, 'group'].values[0]
 		x = x_displacements[groups.index(g)]
 
-		ax.annotate(city, xy=(x, y), xycoords='data', xytext=(x+offset[0], y+offset[1]), textcoords='data',
-					arrowprops=dict(arrowstyle="->", connectionstyle="angle3,angleA=0,angleB=-90"))
+		ax.annotate(str(i+1), xy=(x, y), xycoords='data', xytext=(x+offsets[i][0], y+offsets[i][1]), textcoords='data',
+					arrowprops=dict(arrowstyle="->", connectionstyle="angle3,angleA=0,angleB=-90"), fontsize = fontsize)
+	f.tight_layout()
+	f.savefig(img_path, dpi=300)
+
+	return f, ax
+
+def annotate_lolipop(f, ax, df, img_path, offsets, data_cols, cities, fontsize):
+	
+	ordered_df = df.sort_values(by=data_cols[0])
+	ordered_df['rank']=df[data_cols[0]].rank()
+	
+	# Add city name to plot
+	for i, city in enumerate(cities):
+		y = ordered_df.loc[ ordered_df['city_name']==city, data_cols[1]].values[0]
+		x = ordered_df.loc[ ordered_df['city_name']==city, 'rank'].values[0]
+
+		ax.annotate(city, xy=(x, y), xycoords='data', xytext=(x+offsets[i][0], y+offsets[i][1]), textcoords='data',
+					arrowprops=dict(arrowstyle="->", connectionstyle="angle3,angleA=0,angleB=-90"), fontsize=fontsize)
 
 	f.savefig(img_path)
 
@@ -319,33 +339,38 @@ def inset_figure(f, ax, df_scatter, city_group_dict, cities, inset_positions, zo
 
 	return f, x
 
-def lolipop_figure(df, data_cols, rename_dict, title, scale_data = False, figsize = (10,10), labelsize = 14, legend_size = 15, titlesize = 20, pt_size=20, legend_title = None, output_path = 'coverage_lolipop.png'):
+def lolipop_figure(df, data_cols, rename_dict, title, scale_data = False, figsize = (10,10), labelsize = 14, legend_size = 15, titlesize = 20, pt_size=20, linewidth=10, legend_title = None, output_path = 'coverage_lolipop.png'):
 	
 	# Reorder it following the values of the first value:
 	ordered_df = df.sort_values(by=data_cols[0])
 	my_range=range(1,len(df.index)+1)
 
 	f, ax = plt.subplots(figsize=figsize)
+
+	ax.spines['top'].set_visible(False)
+	ax.spines['right'].set_visible(False)
+	#ax.spines['bottom'].set_visible(False)
+	#ax.spines['left'].set_visible(False)
 	 
 	# The horizontal plot is made using the hline function
-	ax.vlines(x=my_range, ymin=ordered_df[data_cols[0]], ymax=ordered_df[data_cols[1]], color='grey', alpha=0.4)
-	ax.scatter(my_range, ordered_df[data_cols[0]], color='skyblue', alpha=1, label=rename_dict[data_cols[0]])
-	ax.scatter(my_range, ordered_df[data_cols[1]], color='green', alpha=0.4 , label=rename_dict[data_cols[1]])
-	ax.legend()
+	ax.vlines(x=my_range, ymin=ordered_df[data_cols[0]], ymax=ordered_df[data_cols[1]], color='grey', alpha=0.4, linewidth = linewidth)
+	ax.scatter(my_range, ordered_df[data_cols[0]], color='skyblue', alpha=1, label=rename_dict[data_cols[0]], s=pt_size)
+	ax.scatter(my_range, ordered_df[data_cols[1]], color='green', alpha=0.4 , label=rename_dict[data_cols[1]], s=pt_size)
+	ax.legend(loc=(0.05,0.65), prop={'size': legend_size})
 	 
 	# Add title and axis names
 	ax.set_xticks([])
 	ax.tick_params(axis='y', labelsize = labelsize)
 	plt.title(title, fontdict = {'fontsize':titlesize})
 	#ax.set_ylabel('Value of the variables')
-
-	f.savefig(output_path)
+	f.tight_layout()
+	f.savefig(output_path, dpi=300)
 
 	return f, ax
 
 data_cols = ['footways_coverage', 'sidewalks_coverage', 'no_sidewalks_coverage']
-df = dfTotal.reindex(columns = ['city_name', 'footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalks_coverage'})
-data_cols = ['footways_coverage', 'sidewalks_coverage']
+dfViolin = dfTotal.reindex(columns = ['city_name', 'footways_coverage', 'all_sidewalks_coverage']).rename(columns = {'all_sidewalks_coverage':'sidewalks_coverage'})
+data_cols = ['footways_coverage']
 
 
 img_path = os.path.join(img_dir, "coverage_distributions.png")
@@ -356,20 +381,26 @@ f, ax = violin_plot(dfTotal, data_cols, None, img_path_pop, search_term_to_popqu
 
 img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined.png")
 img_path_pop = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop.png")
-f, ax = violin_plot(df, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
-f, ax = violin_plot(df, data_cols, None, img_path_pop, search_term_to_popquant, figsize = (10,10), axes_bbox= [0.1,0.1,0.8,0.75], pt_size=20, legend_title = "Population")
+f, ax = violin_plot(dfViolin, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+f, ax = violin_plot(dfViolin, data_cols, None, img_path_pop, search_term_to_popquant, figsize = (10,30), axes_bbox= [0.1,0.1,0.8,0.75], pt_size=25, legend_title = "Population",  labelsize = 20)
+
+img_path_pop = os.path.join(img_dir, "footways_sidewalks_coverage_groupbypop.png")
+data_cols = ["Pavement Centre Line Coverage"]
+df = dfViolin.rename(columns={'footways_coverage':"Pavement Centre Line Coverage"})
+f, ax = violin_plot(df, data_cols, None, img_path_pop, search_term_to_popquant, figsize = (10,22), axes_bbox= [0.1,0.1,0.8,0.75], pt_size=200, legend_title = "Population",  labelsize = 30, legend_size = 25)
+annotate_figure(f, ax, df, search_term_to_popquant, img_path_pop, [(0.01,0.01), (0.01,0.005), (0.01,0.01), (0.01,0.01)], cities = None, data_col = data_cols[0])
 
 
 # Illustrate which cities have higest coverage
 img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_annotated.png")
-annotate_figure(f, ax, df, search_term_to_popquant, img_path, (0.05,0.1), cities = None, data_col = "footways_coverage")
+annotate_figure(f, ax, dfViolin, search_term_to_popquant, img_path, (0.05,0.1), cities = None, data_col = "footways_coverage")
 
 
 # Add inset to show the street network of a particular city
 img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_imginset.png")
 cities = ['London, England', 'San Jose, United States']
-f, ax = violin_plot(df, data_cols, None, None, search_term_to_popquant, figsize = (30,40), axes_bbox= [0.15,0.1,0.75,0.6], labelsize = 30, legend_size = 20, pt_size=250, legend_title = "Population")
-inset_figure(f, ax, df, search_term_to_popquant, None, [(0.15,0.8), (0.4, 0.8), (0.65, 0.8), (0.9, 0.8)], 0.3, img_dir, img_path, data_col = "footways_coverage")
+f, ax = violin_plot(dfViolin, data_cols, None, None, search_term_to_popquant, figsize = (30,40), axes_bbox= [0.15,0.1,0.75,0.6], labelsize = 30, legend_size = 20, pt_size=250, legend_title = "Population")
+inset_figure(f, ax, dfViolin, search_term_to_popquant, None, [(0.15,0.8), (0.4, 0.8), (0.65, 0.8), (0.9, 0.8)], 0.3, img_dir, img_path, data_col = "footways_coverage")
 
 
 #
@@ -378,10 +409,21 @@ inset_figure(f, ax, df, search_term_to_popquant, None, [(0.15,0.8), (0.4, 0.8), 
 img_path = os.path.join(img_dir, "coverage_lolipop.png")
 data_cols = ['footways_coverage','highway_footways_coverage']
 rename_dict = dict(zip(data_cols, ['["footway"="sidewalk"] Coverage', '["highway"="footway"] Coverage'] ))
-f, ax = lolipop_figure(df, data_cols, rename_dict, "Comparing Coverage of Footway Tagging Conventions", scale_data = False, figsize = (10,10), labelsize = 16, legend_size = 15, titlesize = 18, pt_size=20, legend_title = None, output_path = img_path)
+f, ax = lolipop_figure(dfTotal, data_cols, rename_dict, None, scale_data = False, figsize = (20,26), labelsize = 30, legend_size = 25, titlesize = 18, pt_size=130, linewidth = 3, legend_title = None, output_path = img_path)
+annotate_lolipop(f, ax, dfTotal, img_path, [[-9,0.027],[-2,0.02],[-15,0.01]], data_cols, ['Melbourne, Australia', 'Warsaw, Poland','Salt Lake City, United States'], 20)
 
 img_path = os.path.join(img_dir, "coverage_lolipop_scaled.png")
-f, ax = lolipop_figure(df, data_cols, rename_dict, "Comparing Coverage of Footway Tagging Conventions", scale_data = True, figsize = (10,10), labelsize = 16, legend_size = 15, titlesize = 18, pt_size=20, legend_title = None, output_path = img_path)
+f, ax = lolipop_figure(dfTotal, data_cols, rename_dict, "Comparing Coverage of Footway Tagging Conventions", scale_data = True, figsize = (10,10), labelsize = 16, legend_size = 15, titlesize = 18, pt_size=20, legend_title = None, output_path = img_path)
+
+# Identify cities with high and low deviation between hf and fs
+
+
+
+#
+# Region level summary stats
+#
+dfViolin['Region'] = dfViolin['city_name'].replace(search_term_to_group)
+print(dfViolin.groupby('Region')['footways_coverage'].describe()) 
 
 ############################
 #
