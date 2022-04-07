@@ -9,6 +9,8 @@ python/.ipynb_checkpoints/*
 .Rhistory
 .RData
 .Ruserdata
+data/urban_access_cities_large.zip
+data/.DS_Store
 /data/london/clapham_common/topographicAreaPedestrian.cpg
 /data/london/clapham_common/topographicAreaPedestrian.dbf
 /data/london/clapham_common/topographicAreaPedestrian.prj
