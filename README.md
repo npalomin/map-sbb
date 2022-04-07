@@ -26,13 +26,13 @@ Figures produced by the `analyse_city_data.py` script. Figures for the poster ar
 
 Python Code for OSM Queries and Analysis
 
-osm_streetspace_utils.py
+`osm_streetspace_utils.py`
 - Small library of functions for querying OSM data, forming geometries from returned data, and aggregating metadata
 
-get_city_data.py
+`get_city_data.py`
 - Script for downloading osm geometries for multiple cities
 
-analyse_city_data.py
+`analyse_city_data.py`
 - Script to load local osm city data and calculate various geometry coverage metrics. Also produce figures to visualise these metrics.
 
 
