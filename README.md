@@ -1,5 +1,24 @@
-# Mapping space between buildings
+# Mapping the space between buildings using Open Street Map
 
-[Google drive meeting notes](https://docs.google.com/document/d/1L2oc2-gExLVKf80bpLF5QTWXPlL1lzuKJ54PP876t5M/edit?usp=sharing)
+This project explores new trends in mapping the space of the street in OpenStreetMap and challenges the predominant conventions of Road Centre Line representations that are commonly used for motor vehicle routing.
 
-Usually, I'll create a Research log in R Markdown (Rmd) and deploy an html for easy [access](https://npalomin.github.io/map-sbb/R/Research_Log.html). Feel free to organise files as you see fit.
+The `Poster` folder contains the poster and working material presented at the 30th Geographical Information Science Research UK hosted by the Geographic Data Science Lab and Department of Geography and Planning at the University of Liverpool (GISRUK 2022).
+
+## Citation
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6414228.svg)](https://doi.org/10.5281/zenodo.6414228)
+
+```bibtex
+@misc{obi_sargoni_2022_6414228,
+  author       = {Obi Sargoni and
+                  Hannah Gumble and
+                  Nicolas Palominos},
+  title        = {{Mapping the space between buildings using Open 
+                   Street Map}},
+  month        = apr,
+  year         = 2022,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.6414228},
+  url          = {https://doi.org/10.5281/zenodo.6414228}
+}
+```
