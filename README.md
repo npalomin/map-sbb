@@ -2,7 +2,25 @@
 
 This project explores new trends in mapping the space of the street in OpenStreetMap and challenges the predominant conventions of Road Centre Line representations that are commonly used for motor vehicle routing.
 
+## Poster
+
 The `Poster` folder contains the poster and working material presented at the 30th Geographical Information Science Research UK hosted by the Geographic Data Science Lab and Department of Geography and Planning at the University of Liverpool (GISRUK 2022).
+
+## R
+
+Some R scripts used for exploratory analysis.
+
+## data
+
+`AllCities-Urban access across the globe.csv` is used as the initial sample of cities we collect OSM data for.
+
+`urban_access_cities/urban_access_cities_footways_coverage.csv` the coverage metrics we produce and analyse.
+
+`urban_access_cities/name_alias.csv` Aliasing of names used to ensure the correct city administrative boundary is queried from OSM.
+
+## images
+
+Figures produced by the `analyse_city_data.py` script. Figures for the poster are in the `urban_access_cities` folder. We also ran the analysis for a sample of UK towns and cities and these figures are in the `uk_towns_cities` folder.
 
 ## python
 
