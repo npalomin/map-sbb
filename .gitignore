@@ -28,4 +28,5 @@ python/.ipynb_checkpoints/*
 ~/data/urban_access_cities/urban_access_cities_footways_coverage.csv
 /data/archive/*
 /data/uk_towns_cities/*
+/images/urban_access_cities/archive/*
 .DS_Store
