@@ -354,8 +354,8 @@ def lolipop_figure(df, data_cols, rename_dict, title, scale_data = False, figsiz
 	 
 	# The horizontal plot is made using the hline function
 	ax.vlines(x=my_range, ymin=ordered_df[data_cols[0]], ymax=ordered_df[data_cols[1]], color='grey', alpha=0.4, linewidth = linewidth)
-	ax.scatter(my_range, ordered_df[data_cols[0]], color='skyblue', alpha=1, label=rename_dict[data_cols[0]], s=pt_size)
-	ax.scatter(my_range, ordered_df[data_cols[1]], color='green', alpha=0.4 , label=rename_dict[data_cols[1]], s=pt_size)
+	ax.scatter(my_range, ordered_df[data_cols[0]], color='#FF6A4E', alpha=1, label=rename_dict[data_cols[0]], s=pt_size)
+	ax.scatter(my_range, ordered_df[data_cols[1]], color='#078484', alpha=0.4 , label=rename_dict[data_cols[1]], s=pt_size)
 	ax.legend(loc=(0.05,0.65), prop={'size': legend_size})
 	 
 	# Add title and axis names
@@ -408,8 +408,8 @@ inset_figure(f, ax, dfViolin, search_term_to_popquant, None, [(0.15,0.8), (0.4, 
 #
 img_path = os.path.join(img_dir, "coverage_lolipop.png")
 data_cols = ['footways_coverage','highway_footways_coverage']
-rename_dict = dict(zip(data_cols, ['["footway"="sidewalk"] Coverage', '["highway"="footway"] Coverage'] ))
-f, ax = lolipop_figure(dfTotal, data_cols, rename_dict, None, scale_data = False, figsize = (20,26), labelsize = 30, legend_size = 25, titlesize = 18, pt_size=130, linewidth = 3, legend_title = None, output_path = img_path)
+rename_dict = dict(zip(data_cols, ['"footway"="sidewalk" Coverage', '"highway"="footway" Coverage'] ))
+f, ax = lolipop_figure(dfTotal, data_cols, rename_dict, None, scale_data = False, figsize = (20,26), labelsize = 30, legend_size = 30, titlesize = 18, pt_size=130, linewidth = 3, legend_title = None, output_path = img_path)
 annotate_lolipop(f, ax, dfTotal, img_path, [[-9,0.027],[-2,0.02],[-15,0.01]], data_cols, ['Melbourne, Australia', 'Warsaw, Poland','Salt Lake City, United States'], 20)
 
 img_path = os.path.join(img_dir, "coverage_lolipop_scaled.png")
