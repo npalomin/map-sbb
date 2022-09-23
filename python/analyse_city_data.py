@@ -24,7 +24,7 @@ import seaborn as sns
 #############################
 merc_crs = {'init' :'epsg:3857'}
 
-study_area = "urban_access_cities"# uk_towns_cities
+study_area =  "uk_towns_cities"
 
 output_dir = "..//data//"+study_area
 img_dir = "..\\images\\"+study_area
@@ -38,17 +38,17 @@ coverage_file_name = study_area+'_footways_coverage.csv'
 #
 #
 ############################
+
+# WORLD CITIES
+'''
 dfCityPop = pd.read_csv("../data/AllCities-Urban access across the globe.csv", delimiter="\t")
 dfCityPop.dropna(axis=0, how='all', inplace=True)
 
 dfNameAlias = pd.read_csv(os.path.join(output_dir, "name_alias.csv"))
-
 dfCityPop['nm_cntry'] = dfCityPop['City'] + ", " + dfCityPop['Country']
 dfCityPop = pd.merge(dfCityPop, dfNameAlias, on="nm_cntry", how = 'left')
 dfCityPop['search_term'] = dfCityPop['nm_cntry_alias']
 dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'search_term'] = dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'nm_cntry']
-
-cities = dfCityPop['search_term'].values
 
 # Group certain countries together
 cntry_groups = {'United States': 'US+Canada',
@@ -61,15 +61,14 @@ cntry_groups = {'United States': 'US+Canada',
 				'New Zealand': 'Aus+NZ'}
 
 dfCityPop['Group'] = dfCityPop['Country'].replace(cntry_groups)
-
-# Also group by population
-dfCityPop['TotalPopQuantile'] = pd.qcut(dfCityPop['TotalPopulation'], 4).map(lambda x: osmu.format_str_interval(x))
-
-# Get lookup from new city search terms to country group
-search_term_to_group = dfCityPop.set_index('search_term')['Group'].to_dict()
-search_term_to_popquant = dfCityPop.set_index('search_term')['TotalPopQuantile'].to_dict()
+'''
 
 # UK cities
+dfCityPop = pd.read_csv("../data/Major_towns_cities_pop.csv", skiprows = 6)
+dfCityPop.dropna(axis=0, how='any', inplace=True)
+dfCityPop.rename(columns={'2020':'TotalPopulation'}, inplace=True)
+dfCityPop['search_term'] = dfCityPop['major town and city']
+
 '''
 gdfTC = gpd.read_file("../data/Major_Towns_and_Cities_(December_2015)_Boundaries_V2.geojson")
 cities = gdfTC['TCITY15NM'].values
@@ -77,6 +76,15 @@ cities = gdfTC['TCITY15NM'].values
 gdfTC['group'] = 1
 search_term_to_group = gdfTC.set_index('TCITY15NM')['group'].to_dict()
 '''
+
+cities = dfCityPop['search_term'].values
+
+# Also group by population
+dfCityPop['TotalPopQuantile'] = pd.qcut(dfCityPop['TotalPopulation'], 4).map(lambda x: osmu.format_str_interval(x))
+
+# Get lookup from new city search terms to country group
+#search_term_to_group = dfCityPop.set_index('search_term')['Group'].to_dict()
+search_term_to_popquant = dfCityPop.set_index('search_term')['TotalPopQuantile'].to_dict()
 
 #############################
 #
@@ -107,7 +115,7 @@ dataset_names = ['roads','walk_network','footways','sidewalks','no_sidewalks', '
 #
 #
 ###########################
-'''
+
 
 # Initialise data frame
 dfTotal = pd.DataFrame()
@@ -185,7 +193,7 @@ dfTotal['walk_geometries_coverage'] = dfTotal['walk_geometries_length'] / dfTota
 dfTotal.sort_values(by = 'footways_coverage', ascending=False, inplace=True)
 
 dfTotal.to_csv(os.path.join(output_dir, coverage_file_name), index=False)
-'''
+
 ###############################
 #
 #
@@ -375,32 +383,32 @@ data_cols = ['footways_coverage']
 
 img_path = os.path.join(img_dir, "coverage_distributions.png")
 img_path_pop = os.path.join(img_dir, "coverage_distributions_groupbypop.png")
-f, ax = violin_plot(dfTotal, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+#f, ax = violin_plot(dfTotal, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
 f, ax = violin_plot(dfTotal, data_cols, None, img_path_pop, search_term_to_popquant, figsize = (10,10), pt_size=20, legend_title = "Population")
 
 
 img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined.png")
 img_path_pop = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop.png")
-f, ax = violin_plot(dfViolin, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
+#f, ax = violin_plot(dfViolin, data_cols, None, img_path, search_term_to_group, figsize = (10,10), pt_size=20)
 f, ax = violin_plot(dfViolin, data_cols, None, img_path_pop, search_term_to_popquant, figsize = (10,30), axes_bbox= [0.1,0.1,0.8,0.75], pt_size=25, legend_title = "Population",  labelsize = 20)
 
 img_path_pop = os.path.join(img_dir, "footways_sidewalks_coverage_groupbypop.png")
 data_cols = ["Pavement Centre Line Coverage"]
 df = dfViolin.rename(columns={'footways_coverage':"Pavement Centre Line Coverage"})
 f, ax = violin_plot(df, data_cols, None, img_path_pop, search_term_to_popquant, figsize = (10,22), axes_bbox= [0.1,0.1,0.8,0.75], pt_size=200, legend_title = "Population",  labelsize = 30, legend_size = 25)
-annotate_figure(f, ax, df, search_term_to_popquant, img_path_pop, [(0.01,0.01), (0.01,0.005), (0.01,0.01), (0.01,0.01)], cities = None, data_col = data_cols[0])
+#annotate_figure(f, ax, df, search_term_to_popquant, img_path_pop, [(0.01,0.01), (0.01,0.005), (0.01,0.01), (0.01,0.01)], cities = None, data_col = data_cols[0])
 
 
 # Illustrate which cities have higest coverage
-img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_annotated.png")
-annotate_figure(f, ax, dfViolin, search_term_to_popquant, img_path, (0.05,0.1), cities = None, data_col = "footways_coverage")
+#img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_annotated.png")
+#annotate_figure(f, ax, dfViolin, search_term_to_popquant, img_path, (0.05,0.1), cities = None, data_col = "footways_coverage")
 
 
 # Add inset to show the street network of a particular city
-img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_imginset.png")
-cities = ['London, England', 'San Jose, United States']
-f, ax = violin_plot(dfViolin, data_cols, None, None, search_term_to_popquant, figsize = (30,40), axes_bbox= [0.15,0.1,0.75,0.6], labelsize = 30, legend_size = 20, pt_size=250, legend_title = "Population")
-inset_figure(f, ax, dfViolin, search_term_to_popquant, None, [(0.15,0.8), (0.4, 0.8), (0.65, 0.8), (0.9, 0.8)], 0.3, img_dir, img_path, data_col = "footways_coverage")
+#img_path = os.path.join(img_dir, "coverage_distributions_all_sidewalk_combined_groupbypop_imginset.png")
+#cities = ['London, England', 'San Jose, United States']
+#f, ax = violin_plot(dfViolin, data_cols, None, None, search_term_to_popquant, figsize = (30,40), axes_bbox= [0.15,0.1,0.75,0.6], labelsize = 30, legend_size = 20, pt_size=250, legend_title = "Population")
+#inset_figure(f, ax, dfViolin, search_term_to_popquant, None, [(0.15,0.8), (0.4, 0.8), (0.65, 0.8), (0.9, 0.8)], 0.3, img_dir, img_path, data_col = "footways_coverage")
 
 
 #
@@ -432,6 +440,7 @@ print(dfViolin.groupby('Region')['footways_coverage'].describe())
 #
 #
 ############################
+'''
 import scipy
 import statsmodels.api as sm
 import itertools
@@ -516,7 +525,7 @@ for i in indicators:
 
 dfMW = pd.DataFrame(data)
 dfMW.to_csv(os.path.join(output_dir, 'man-whitney-results.csv'), index=False)
-
+'''
 
 '''
 df = dfCityPop.dropna(subset = ['footways_coverage','Walking_pp'])
