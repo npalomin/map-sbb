@@ -18,7 +18,8 @@ importlib.reload(osmu)
 #
 #############################
 merc_crs = {'init' :'epsg:3857'}
-output_dir = "..//data//urban_access_cities"
+region = "uk_towns_cities"
+output_dir = "..//data//{}".format(region)
 
 # Change some config settings
 ox.config(timeout = 400, useful_tags_way = ox.settings.useful_tags_way+['sidewalk'])
@@ -34,6 +35,7 @@ ox.config(timeout = 400, useful_tags_way = ox.settings.useful_tags_way+['sidewal
 #countries = ['United Kingdom', 'France', 'Spain', 'Japan', 'Germany', 'China', 'United States of America', 'Columbia', 'Chile', 'Iraq', 'Egypt']
 
 # Load urban accessibility city data
+'''
 dfCityPop = pd.read_csv("../data/AllCities-Urban access across the globe.csv", delimiter="\t")
 dfCityPop.dropna(axis=0, how='all', inplace=True)
 
@@ -46,10 +48,13 @@ dfCityPop.loc[ dfCityPop['nm_cntry_alias'].isnull(), 'search_term'] = dfCityPop.
 
 cities = dfCityPop['search_term'].values
 boundary_indices = dfCityPop['boundary_index'].values
+'''
 
 # Load UK Towns and Cities boundaries
-#gdfTC = gpd.read_file("../data/Major_Towns_and_Cities_(December_2015)_Boundaries_V2.geojson")
-
+gdfTC = gpd.read_file("../data/Major_Towns_and_Cities_(December_2015)_Boundaries_V2.geojson")
+gdfTC['search_term'] = gdfTC['TCITY15NM']
+boundary_indices = [0]*len(gdfTC)
+cities = gdfTC['search_term'].values
 
 ############################
 #
